@@ -163,7 +163,9 @@ async function doEnter(){
   if(error){
     const r=await sb.auth.signUp({email,password});
     if(r.error){$("btnSend").disabled=false;
-      return gmsg(r.error.message.includes("already")?"Correo o contraseña incorrectos.":r.error.message,"err")}
+      const m=(r.error.message||"");
+      const conocido=/already|disabled|not allowed|registered/i.test(m);
+      return gmsg(conocido?"Correo o contraseña incorrectos.":m,"err")}
     if(!r.data.session){$("btnSend").disabled=false;
       return gmsg("Cuenta creada. Falta desactivar 'Confirm email' en Supabase para entrar directo.","err")}
   }
