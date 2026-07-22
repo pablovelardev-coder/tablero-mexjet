@@ -103,15 +103,18 @@ estado en la cabecera ("guardando…" / "✓ sincronizado HH:MM" / "⚠︎ error
 ## Integración multi-dispositivo (Mac ↔ iPhone)
 
 Objetivo de Pablo: continuar el **mismo trabajo** desde Mac y desde iPhone sin
-perder el contexto. Para lograrlo hay **dos memorias** complementarias:
+perder el contexto. Para lograrlo hay **tres memorias** complementarias:
 
 1. **Este `CLAUDE.md`** (en el repo) — memoria de *cómo trabajamos*: contexto,
    decisiones y flujos. Viaja con el código; cualquier sesión de Claude abierta
    sobre este repo lo lee al arrancar, en cualquier dispositivo. Para
    conservarlo hay que **hacer commit y push al terminar**.
-2. **Supabase** — memoria de los *datos vivos* del tablero (tareas, tarjetas,
-   frentes). Viaja con la cuenta; la app los sincroniza en tiempo real
+2. **`boards` en Supabase** — memoria de los *datos vivos* del tablero (tareas,
+   tarjetas, frentes). Viaja con la cuenta; la app los sincroniza en tiempo real
    (Realtime) entre dispositivos.
+3. **`session_log` en Supabase** — bitácora de cada sesión de Claude (resúmenes
+   de contexto). Es la memoria "de conversación" que **sí** viaja entre
+   dispositivos (ver más abajo).
 
 ### Acceso directo a Supabase desde Claude
 
@@ -125,9 +128,9 @@ Las sesiones de Claude tienen conectado el proyecto de Supabase por un
 - **Solo se usa cuando Pablo lo pide explícitamente.**
 
 Cómo ubicar los datos: la tabla `boards` tiene una fila por `kind`
-(`ventas` / `direccion` / `personal`) del único usuario. Filtrar por `kind`; si
-hace falta el `user_id`, consultarlo en la misma tabla (no se guarda aquí para
-no exponerlo en el repo, que es público).
+(`ventas` / `direccion` / `personal`), todas del mismo usuario — basta filtrar
+por `kind`. (El `user_id` no hace falta para operar; si se necesita, se consulta
+al momento.)
 
 Ejemplos de lo que Pablo puede pedir desde cualquier dispositivo:
 - "¿Qué pendientes vencidos tengo en Dirección?"
@@ -138,14 +141,28 @@ Ejemplos de lo que Pablo puede pedir desde cualquier dispositivo:
 > `matches`, `predictions` — una quiniela de fútbol) y una tabla `assets`. No
 > tienen que ver con el tablero; no tocarlas salvo que Pablo lo pida.
 
-### Regla para no perder el contexto de las sesiones de Mac
+### Bitácora de sesiones (`session_log`) — memoria compartida entre dispositivos
 
-El contexto acumulado en las sesiones de **Mac** (conversaciones y decisiones
-que aún no están escritas) **no viaja solo** — vive en esos chats. Por eso el
-trabajo de documentar los flujos en este `CLAUDE.md` se hace **desde la Mac**,
-donde está ese contexto, para volcarlo aquí y que quede disponible también en
-iPhone. Regla práctica: al cerrar una sesión con aprendizajes nuevos, anotarlos
-aquí y hacer push antes de cambiar de dispositivo.
+Para que el contexto no dependa de recordar un chat, existe la tabla
+`public.session_log` en Supabase (RLS por usuario, igual que `boards`). Es la
+**memoria compartida real** entre Mac, iPhone y web.
+
+- Columnas: `id`, `user_id`, `device`, `session_ref`, `summary`, `tags`,
+  `created_at`.
+- **Al abrir una sesión** (cualquier dispositivo): leer las últimas entradas
+  para retomar el hilo —
+  `select summary, device, created_at from session_log order by created_at desc limit 5;`
+- **Al cerrar una sesión** con algo relevante: escribir un resumen breve (qué se
+  hizo, decisiones, pendientes). Filtrar/insertar por `user_id`.
+- Así, aunque el texto crudo de un chat no viaje entre dispositivos, **el
+  resumen sí**: vive en Supabase y lo lee cualquier sesión.
+
+Aclaración sobre "hacerlo desde la Mac": documentar los *Flujos de trabajo*
+desde la Mac es **puntual, no una regla permanente** — solo porque ese contexto
+todavía vive en chats previos de la Mac. Una vez volcado (a este `CLAUDE.md` o a
+`session_log`), **el dispositivo deja de importar** y se puede continuar desde
+donde sea. En adelante, el hábito es simplemente: leer la bitácora al empezar y
+escribirla al terminar.
 
 ### Pendiente abierto
 
@@ -160,4 +177,6 @@ aquí y hacer push antes de cambiar de dispositivo.
 2. `415e90a` — Mensaje de error claro cuando la contraseña es incorrecta y el
    registro está apagado.
 3. `fd9706d` — Agrega `CLAUDE.md` con el contexto del proyecto.
-4. Documenta la integración Mac ↔ iPhone y el acceso admin a Supabase.
+4. `628e4b7` — Documenta la integración Mac ↔ iPhone y el acceso admin a Supabase.
+5. Crea la bitácora `session_log` (memoria compartida) y afina la sección de
+   integración multi-dispositivo.
