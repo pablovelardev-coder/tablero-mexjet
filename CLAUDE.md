@@ -100,8 +100,64 @@ estado en la cabecera ("guardando…" / "✓ sincronizado HH:MM" / "⚠︎ error
 - **No** meter datos de negocio ni secretos en el repo: solo la anon key
   pública puede aparecer en el cliente.
 
+## Integración multi-dispositivo (Mac ↔ iPhone)
+
+Objetivo de Pablo: continuar el **mismo trabajo** desde Mac y desde iPhone sin
+perder el contexto. Para lograrlo hay **dos memorias** complementarias:
+
+1. **Este `CLAUDE.md`** (en el repo) — memoria de *cómo trabajamos*: contexto,
+   decisiones y flujos. Viaja con el código; cualquier sesión de Claude abierta
+   sobre este repo lo lee al arrancar, en cualquier dispositivo. Para
+   conservarlo hay que **hacer commit y push al terminar**.
+2. **Supabase** — memoria de los *datos vivos* del tablero (tareas, tarjetas,
+   frentes). Viaja con la cuenta; la app los sincroniza en tiempo real
+   (Realtime) entre dispositivos.
+
+### Acceso directo a Supabase desde Claude
+
+Las sesiones de Claude tienen conectado el proyecto de Supabase por un
+**conector de administrador** (no por el login de la app). Esto significa:
+
+- **No depende del dispositivo:** funciona igual desde una sesión en Mac o en
+  iPhone — es el puente real entre ambos.
+- Permite **leer y escribir los tableros directamente** (salta el RLS): agregar,
+  mover, editar o cerrar tareas y tarjetas por chat.
+- **Solo se usa cuando Pablo lo pide explícitamente.**
+
+Cómo ubicar los datos: la tabla `boards` tiene una fila por `kind`
+(`ventas` / `direccion` / `personal`) del único usuario. Filtrar por `kind`; si
+hace falta el `user_id`, consultarlo en la misma tabla (no se guarda aquí para
+no exponerlo en el repo, que es público).
+
+Ejemplos de lo que Pablo puede pedir desde cualquier dispositivo:
+- "¿Qué pendientes vencidos tengo en Dirección?"
+- "Agrega una tarjeta en el pipeline de Ventas: …"
+- "Marca como Hecha la tarea …" / "Mueve la tarjeta … a Negociación".
+
+> Nota: el mismo Supabase aloja además otro proyecto (tablas `users`,
+> `matches`, `predictions` — una quiniela de fútbol) y una tabla `assets`. No
+> tienen que ver con el tablero; no tocarlas salvo que Pablo lo pida.
+
+### Regla para no perder el contexto de las sesiones de Mac
+
+El contexto acumulado en las sesiones de **Mac** (conversaciones y decisiones
+que aún no están escritas) **no viaja solo** — vive en esos chats. Por eso el
+trabajo de documentar los flujos en este `CLAUDE.md` se hace **desde la Mac**,
+donde está ese contexto, para volcarlo aquí y que quede disponible también en
+iPhone. Regla práctica: al cerrar una sesión con aprendizajes nuevos, anotarlos
+aquí y hacer push antes de cambiar de dispositivo.
+
+### Pendiente abierto
+
+- [ ] **Sección "Flujos de trabajo"** — rutinas recurrentes de Pablo y
+  preferencias de cómo debe trabajar Claude con él. Se completará **desde la
+  Mac** (ver el pendiente homónimo en el tablero de Dirección, etiqueta
+  `Claude`).
+
 ## Historial
 
 1. `cf982ae` — Tablero MexJet: Ventas, Dirección y Personal (versión inicial).
 2. `415e90a` — Mensaje de error claro cuando la contraseña es incorrecta y el
    registro está apagado.
+3. `fd9706d` — Agrega `CLAUDE.md` con el contexto del proyecto.
+4. Documenta la integración Mac ↔ iPhone y el acceso admin a Supabase.
