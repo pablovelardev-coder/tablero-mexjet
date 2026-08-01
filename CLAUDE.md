@@ -66,12 +66,17 @@ Tabla **`boards`** con:
 
 ```js
 {
-  cards:   [{ id, title, meta, col }],          // tarjetas del pipeline (Kanban)
-  tasks:   [{ id, due, text, frente, status }], // pendientes
-  rems:    [{ id, date, text, frente }],        // recordatorios
+  cards:   [{ id, title, meta, notes, col, frente,
+              labels: [],                        // etiquetas
+              checklist: [{ id, text, done }] }],// tarjetas del pipeline (Kanban)
+  tasks:   [{ id, due, text, frente, status }],  // pendientes
+  rems:    [{ id, date, text, frente }],         // recordatorios
   frentes: [{ name, pct }]                       // frentes de trabajo (avance %)
 }
 ```
+
+Las tarjetas también pueden llevar recordatorios propios (con fecha), además de
+los del arreglo `rems` a nivel tablero.
 
 ## Funcionalidad
 
@@ -79,7 +84,7 @@ Tres tableros conmutables — **Ventas · Dirección · Personal** — cada uno 
 sus propias columnas de pipeline y su propio orden de pestañas.
 
 **Columnas de pipeline por tablero** (`COLS`):
-- **Ventas:** Prospecto → Calificado → Propuesta enviada → Negociación → Ganado / Perdido
+- **Ventas:** Prospecto → Calificado → Propuesta enviada → Negociación → Ganado / Perdido → Archivo
 - **Dirección:** Nuevo → En proceso → En espera → Resuelto
 - **Personal:** Ideas → Por hacer → En curso → Hecho
 
