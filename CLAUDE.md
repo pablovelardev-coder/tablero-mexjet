@@ -17,7 +17,8 @@ Contexto del proyecto para retomar el trabajo en futuras sesiones.
 | Definición de una rutina | Supabase → `session_log` | `where 'receta' = any(tags)` |
 | Acciones que quedaron encargadas | Supabase → `session_log` | `where 'accion-pendiente' = any(tags)` |
 | Archivos locales de rutinas | **Solo en la Mac** | `~/.claude/scheduled-tasks/` |
-| Conocimiento por entidad (wiki) | **Pendiente** — ver *Huecos* | — |
+| Conocimiento por entidad (wiki) | Repo privado del vault | `pablovelardev-coder/segundo-cerebro` |
+| Respaldo de los tableros | Supabase → `boards_backup` | `where kind = … order by taken_at desc` |
 
 ## Qué es
 
@@ -57,10 +58,29 @@ Tabla **`boards`** con:
 | `updated_at`  | timestamp de última escritura                     |
 
 - Clave de conflicto para upsert: `user_id,kind`.
+- ⚠️ **El upsert reemplaza `data` completo.** Si un cliente arranca con estado
+  vacío y sincroniza, borra el tablero entero. Pasó el 1-ago-2026 (ver
+  *Incidentes*). Cualquier escritura automatizada debe **agregar** al arreglo,
+  nunca reemplazar la fila.
 - **RLS activo:** cada usuario solo lee/escribe sus propias filas.
 - **Realtime:** el cliente se suscribe a `postgres_changes` sobre `boards`
   para sincronizar entre pestañas/dispositivos. Ignora el "eco" de la propia
   escritura durante 1.5s (`lastWrite`).
+
+Tabla **`boards_backup`** — snapshots de `boards`:
+
+| Columna | Notas |
+|---|---|
+| `kind`, `data` | copia literal de la fila de `boards` |
+| `n_cards`, `n_tasks`, `n_rems` | conteos, para detectar pérdidas de un vistazo |
+| `vacio` | columna generada: `true` si el tablero quedó sin tarjetas |
+| `taken_at` | cuándo se tomó |
+
+- **RLS activo y sin políticas:** solo el conector de administrador entra. La
+  app web (anon key) **no puede tocarla**, ni para leer.
+- La escribe la rutina cloud *Respaldo de tableros*, cada día hábil a las 07:10.
+- Restaurar:
+  `update boards set data = (select data from boards_backup where kind='X' and vacio=false order by taken_at desc limit 1) where kind='X';`
 
 ### Forma del JSON `data`
 
@@ -147,10 +167,11 @@ perder el contexto. Para lograrlo hay **tres memorias** complementarias:
 
 | Sí viaja (accesible desde cualquier sesión) | No viaja (solo en la Mac) |
 |---|---|
-| `boards`, `session_log` (Supabase) | `~/.claude/scheduled-tasks/` |
-| Gmail, Google Calendar, Drive | El vault de Obsidian (hasta que sea repo git) |
-| Rutinas *cloud* (Routines con `trig_…`) | El CSV del CRM |
+| `boards`, `boards_backup`, `session_log` (Supabase) | `~/.claude/scheduled-tasks/` |
+| Gmail, Google Calendar, Drive | El CSV del CRM |
+| Rutinas *cloud* (Routines con `trig_…`) | Los PDFs de evidencia |
 | Este repo (`CLAUDE.md`, código) | Rutinas *locales* (scheduled-tasks) |
+| El vault de conocimiento (repo privado) | Respaldos en archivo del tablero |
 
 Corolario práctico: una sesión en la nube o en el iPhone **no puede** leer ni
 editar archivos de la Mac. Si algo requiere disco local, se hace desde una
@@ -206,25 +227,22 @@ archivos). El catálogo completo con el prompt exacto de cada una está en
 
 ### Rutinas cloud (Routines de Claude Code, con `trigger_id`)
 
-Seis activas, todas de lunes a viernes. Cinco disparan a las **07:00
-America/Monterrey** (`cron '0 13 * * 1-5'` en UTC) y una a las 08:16:
+**Tres activas**, lunes a viernes, encadenadas de forma que el respaldo corre
+antes del parte y el parte encuentra los datos ya asegurados:
 
-| Rutina | Contenido |
-|---|---|
-| Parte matutino completo | agenda + flota + pendientes + leads |
-| Resumen matutino | agenda + pendientes + leads |
-| Estatus de flota + incidencias y quejas | operación del día |
-| Pendientes de hoy — Dirección | tablero `direccion` |
-| Pendientes de hoy — Ventas | tablero `ventas` |
-| Monitoreo de buzón general (08:16) | correo entrante |
+| Hora (Monterrey) | Rutina | Qué hace | Push |
+|---|---|---|---|
+| **07:10** | Respaldo de tableros | snapshot a `boards_backup`, purga >90 días y **alerta si un tablero quedó vacío o perdió >30% de tarjetas** | sí |
+| **07:20** | Parte matutino completo | juntas del día · estatus de flota · incidencias · quejas de clientes · pendientes de Dirección agrupados por departamento · pipeline de Ventas · leads del buzón | sí + correo |
+| 07:00 | Pipeline de ventas | oportunidades en Negociación y Propuesta, y el riesgo de flota 2028 | — |
 
-> ⚠️ **Solapamiento detectado (2026-08-01):** cinco de estas seis corren a la
-> misma hora y su contenido se traslapa — *Parte matutino completo* ya incluye
-> lo que entregan *Resumen matutino*, *Pendientes Dirección*, *Pendientes
-> Ventas* y buena parte de *Flota*. Además, solo algunas mandan
-> `PushNotification`; las demás tienen el canal de notificación **sin
-> configurar**, que es la razón por la que su resultado no llega al teléfono.
-> Pendiente: consolidar y dejar el push encendido en las que sobrevivan.
+**Cuatro desactivadas** por haberse consolidado en *Parte matutino completo*:
+Resumen matutino · Estatus de flota · Pendientes de Dirección · Monitoreo del
+buzón. Se conservan por si hace falta volver a separarlas.
+
+> Consolidado el 2026-08-01. Antes había seis rutinas, cinco a la misma hora y
+> con contenido traslapado; además varias tenían el canal de notificación sin
+> configurar, y por eso su resultado nunca llegaba al teléfono.
 
 ### Rutinas locales (`~/.claude/scheduled-tasks/`, solo Mac)
 
@@ -259,24 +277,64 @@ reautorizar y reintentar, o dejar la acción en el buzón (ver patrón arriba).
 
 ## Huecos conocidos
 
-- [ ] **Capa de conocimiento (`/wiki`).** Hoy la memoria es *episódica* (qué
-  pasó tal día) pero no *semántica* (qué sé de tal cliente). Reconstruir un
-  asunto obliga a escanear muchas entradas. Falta una nota por entidad que se
-  actualice en vez de acumularse.
-- [ ] **Capa de evidencia (`/raw`).** No hay dónde guardar los originales (PDFs
-  oficiales, imágenes de tickets, mensajes recibidos). Se han perdido fuentes
-  que luego no se pudieron consultar.
-- [ ] **Vault de Obsidian atado a la Mac.** Mientras no sea repo git, rompe el
-  objetivo de independencia de dispositivo.
+- [x] ~~**Vault de Obsidian atado a la Mac.**~~ **Resuelto 2026-08-01:** el vault
+  es repo git privado (`pablovelardev-coder/segundo-cerebro`) y ya viaja. Trae
+  un `INDEX.md` como puerta de entrada. Detalle técnico: la base de datos de git
+  vive **fuera de iCloud** (`git init --separate-git-dir`), porque el Mac tiene
+  *Optimize Mac Storage* activo y iCloud puede desalojar objetos de `.git` y
+  corromper el repo. El árbol de trabajo sigue en iCloud para que Obsidian iOS
+  lo abra.
+- [~] **Capa de conocimiento (`/wiki`).** Carpeta creada el 2026-08-01, **vacía**.
+  Las notas por entidad siguen en su ubicación original; la propuesta de
+  migración está en el `INDEX.md` del vault, sin aplicar. Ojo: mover rompe los
+  enlaces `[[…]]`, conviene hacerlo desde el propio Obsidian.
+- [~] **Capa de evidencia (`/raw`).** Carpeta creada, **vacía**. Falta decidir si
+  los PDFs originales se copian al vault — implica peso y subir más material
+  sensible, aunque el repo sea privado.
 - [ ] **Taxonomía de tags sin control.** ~90 tags distintos en `session_log`, la
   mayoría usados una sola vez; degrada la búsqueda. Falta vocabulario corto.
 - [ ] **Sin rutina de salud.** Nadie revisa vencidos, acciones sin cerrar ni
-  notas huérfanas. Ya hubo un recordatorio que venció sin ejecutarse.
-- [ ] **Rutinas cloud solapadas** (ver advertencia arriba).
+  notas huérfanas. Ya hubo un recordatorio que venció sin ejecutarse. *(La
+  rutina de respaldo ya vigila la integridad de los tableros, pero no la salud
+  de los pendientes.)*
+- [x] ~~**Rutinas cloud solapadas.**~~ **Resuelto 2026-08-01:** tres activas,
+  encadenadas y con push encendido; cuatro desactivadas.
+- [ ] **Sin automatización de commit/push del vault.** Hoy es manual desde la
+  Mac. Mientras no se haga push, lo escrito ahí no viaja.
+- [ ] **El repo del vault no está conectado como fuente de Claude.** Está
+  publicado, pero una sesión en la nube o en el iPhone todavía no lo lee solo.
 
 > **Importante:** el vault de conocimiento debe vivir en un repositorio
 > **privado**, porque contiene nombres de clientes, montos y asuntos. Este
 > repositorio es público: aquí solo va arquitectura, nunca datos de negocio.
+
+## Incidentes
+
+### 2026-08-01 — Borrado de los tres tableros
+
+**Qué pasó.** Al abrir por primera vez la app nueva (GitHub Pages), sincronizó
+su estado inicial vacío sobre `boards` y borró los tres tableros. Coexistían dos
+clientes apuntando a la misma tabla: esta app y una versión anterior en HTML
+local. Ambos hacen `upsert` reemplazando `data` completo.
+
+**Cómo se recuperó.** No había respaldo. Dirección y Personal se reconstruyeron
+desde el historial de la conversación en curso; **Ventas se recuperó de los
+transcripts locales de Claude** (`~/.claude/projects/*.jsonl`), donde había
+quedado un inventario por columna y el detalle de las tarjetas.
+
+**Qué se hizo para que no se repita.**
+1. `boards_backup` + rutina cloud diaria que **alerta** si un tablero queda vacío
+   o pierde más del 30% de sus tarjetas.
+2. Respaldo semanal a archivo en la Mac, como copia fuera de Supabase.
+3. Los HTML de la app anterior se renombraron a `_OBSOLETO_NO-ABRIR_*` con un
+   `LEEME.md` al lado.
+4. Las rutinas que escriben en `boards` llevan instrucción explícita de **solo
+   agregar**, nunca reemplazar la fila.
+
+**Lecciones.** (a) Un `upsert` de fila completa es un borrado esperando su turno.
+(b) Dos clientes sobre la misma tabla es un riesgo, no una comodidad.
+(c) Los transcripts locales salvaron el día — pero no son una estrategia de
+respaldo, son arqueología.
 
 ## Historial
 
@@ -289,3 +347,7 @@ reautorizar y reintentar, o dejar la acción en el buzón (ver patrón arriba).
    sección de integración multi-dispositivo.
 6. Convierte `CLAUDE.md` en índice: mapa de contenido, regla de qué viaja entre
    dispositivos, catálogo de rutinas, patrones de trabajo y huecos conocidos.
+7. `f0ac23f` — Actualiza la doc del JSON y las columnas a la versión actual.
+8. Documenta `boards_backup`, el incidente del 1-ago y su remediación; corrige
+   el catálogo de rutinas (3 activas, encadenadas); marca como resueltos los
+   huecos del vault y del solapamiento.
