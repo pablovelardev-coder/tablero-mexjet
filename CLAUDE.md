@@ -266,6 +266,34 @@ buzón. Se conservan por si hace falta volver a separarlas.
   duplicarla.
 - **Confirmar antes de actuar hacia afuera.** Los correos a terceros se
   redactan como borrador y se envían solo con visto bueno explícito.
+- **Verificar la fuente antes de citarla.** Si un documento invoca un contrato,
+  una cláusula o una cifra, hay que leer el instrumento y confirmarlo. Ya hubo
+  un borrador que citaba una fecha de contrato equivocada y una cláusula
+  inexistente; se detectó antes de enviarlo al cliente.
+
+## Procesamiento de documentos (PDF, escaneos, Word)
+
+Regla de costo: un PDF **con capa de texto** se lee barato (extraer y filtrar).
+Un PDF **escaneado** obliga a renderizar páginas y leerlas como imagen, lo que
+cuesta del orden de 10-20x más. Por eso conviene resolverlo una sola vez.
+
+Herramientas en la Mac (`brew install poppler tesseract tesseract-lang ocrmypdf
+qpdf pandoc`):
+
+| Herramienta | Para qué |
+|---|---|
+| `poppler` | `pdftotext` (extraer texto), `pdftoppm` (renderizar) |
+| `tesseract` + `tesseract-lang` | OCR, con español |
+| `ocrmypdf` | Inyecta capa de texto a un escaneo: queda buscable para siempre |
+| `qpdf`, `pandoc` | Partir/unir PDFs; convertir Word a texto |
+
+**Flujo para documentos entrantes:** original intacto a `/raw` (evidencia) →
+`ocrmypdf` para hacerlo buscable → nota de la entidad en `/wiki`.
+
+> Estas herramientas **solo las alcanza una sesión corriendo en la Mac**. Desde
+> iPhone o nube no existen. Por eso el paso de **subir el resultado al vault es
+> obligatorio**: se procesa una vez en la Mac y se consulta barato desde
+> cualquier dispositivo.
 
 ## Conectores y su comportamiento
 
