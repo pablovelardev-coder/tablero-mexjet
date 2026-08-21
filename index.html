@@ -95,6 +95,23 @@
   .tag button{border:none;background:transparent;color:#fff;padding:0;font-size:13px;line-height:1;opacity:.75;cursor:pointer}
   .tag button:hover{opacity:1;color:#fff}
   .card .tags{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 3px}
+  /* --- acciones en la cara de la tarjeta --- */
+  .acts{margin:6px 0 2px;display:flex;flex-direction:column;gap:5px}
+  .act{display:flex;gap:7px;align-items:flex-start;font-size:12px;line-height:1.35}
+  .act .mk{flex:none;width:15px;text-align:center;font-size:11px;padding-top:1px}
+  .act .tx{flex:1;min-width:0}
+  .act .fch{font-weight:700;font-variant-numeric:tabular-nums;margin-right:5px}
+  .act.sig .tx{color:var(--ink)}
+  .act.ult .tx{color:var(--muted)}
+  .act.sig.over .fch{color:var(--lost)}
+  .act.sig.soon .fch{color:var(--warn)}
+  .act.sig .fch{color:var(--accent)}
+  .act.ult .fch{color:var(--muted);font-weight:600}
+  .quien{color:var(--muted);font-size:11px}
+  .stale{display:inline-block;margin-top:4px;font-size:10.5px;font-weight:700;letter-spacing:.03em;
+    color:var(--warn);background:var(--chip);border-radius:20px;padding:1px 8px}
+  .stale.bad{color:var(--lost)}
+  .noacts{color:var(--muted);font-size:12px}
   .card .tags .tag{font-size:10px;padding:1px 7px}
   /* checklist */
   .ck{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px dashed var(--line)}
@@ -169,6 +186,13 @@
     <label>Estado (columna del tablero)</label><select id="cCol"></select>
 
     <label>Frente</label><input id="cFrente" placeholder="ej. ADN · Cobranza — liga los pendientes a esta tarjeta">
+
+    <label>✓ Última acción — qué pasó</label>
+    <div style="display:flex;gap:8px"><input id="cUltFecha" type="date" style="width:150px;flex:none"><input id="cUltTexto" placeholder="p. ej. Se envió la propuesta de 75 h"></div>
+
+    <label>▸ Siguiente acción — qué sigue</label>
+    <div style="display:flex;gap:8px"><input id="cSigFecha" type="date" style="width:150px;flex:none"><input id="cSigTexto" placeholder="p. ej. Hablarle a Silvia Medrano"></div>
+    <input id="cSigQuien" placeholder="quién lo hace (opcional)" style="margin-top:6px">
 
     <label>Detalle</label>
     <div class="grow-wrap"><textarea id="cMeta" placeholder="descripción del tema… (la caja crece conforme escribes)"></textarea><span class="grow-hint">▲▼ desplázate</span></div>
@@ -343,7 +367,7 @@ function renderBoard(){
       const noteHtml=c.notes?`<span class="badge">📝 notas</span>`:"";
       card.innerHTML=`<b>${esc(c.title)}</b>`+
         (tags?`<div class="tags">${tags}</div>`:"")+
-        `<div class="meta">${esc(clip(c.meta||"",110))}</div>`+
+        actsHtml(c)+
         ckHtml+
         ((remHtml||noteHtml)?`<div style="margin-top:5px">${remHtml}${noteHtml}</div>`:"")+
         (pend.length?`<div style="margin-top:6px;border-top:1px dashed #d9d9d9;padding-top:5px">
@@ -373,6 +397,35 @@ let editing=null, TASKFILTER=null;
 const TAGPAL=["#0b5fff","#16a34a","#f97316","#8b5cf6","#dc2626","#0891b2","#b45309","#db2777","#4d7c0f","#475569"];
 function tagColor(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return TAGPAL[h%TAGPAL.length]}
 const clip=(s,n)=>s.length>n?s.slice(0,n)+"…":s;
+/* --- última y siguiente acción en la cara de la tarjeta --- */
+const fchCorta=d=>{if(!d)return"";const[a,m,dd]=d.split("-");
+  return dd+" "+["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"][+m-1]};
+function diasDesde(d){if(!d)return null;return Math.floor((new Date(today())-new Date(d))/864e5)}
+function actsHtml(c){
+  const u=c.ultima||{}, g=c.siguiente||{};
+  const hayU=!!(u.texto||u.fecha), hayG=!!(g.texto||g.fecha);
+  if(!hayU&&!hayG)
+    return c.meta?`<div class="meta">${esc(clip(c.meta,110))}</div>`:"";
+  let h='<div class="acts">';
+  if(hayG){
+    const cl=dueClass(g.fecha,"");
+    h+=`<div class="act sig ${cl}"><span class="mk">▸</span><span class="tx">`+
+       (g.fecha?`<span class="fch">${fchCorta(g.fecha)}</span>`:"")+
+       esc(clip(g.texto||"",120))+
+       (g.quien?` <span class="quien">· ${esc(g.quien)}</span>`:"")+
+       `</span></div>`;
+  }
+  if(hayU){
+    h+=`<div class="act ult"><span class="mk">✓</span><span class="tx">`+
+       (u.fecha?`<span class="fch">${fchCorta(u.fecha)}</span>`:"")+
+       esc(clip(u.texto||"",110))+`</span></div>`;
+  }
+  h+='</div>';
+  const d=diasDesde(u.fecha);
+  if(d!==null&&d>=14)
+    h+=`<span class="stale ${d>=30?"bad":""}">${d} días sin movimiento</span>`;
+  return h;
+}
 function autoGrow(el){
   el.style.height="auto";
   const max=parseInt(getComputedStyle(el).maxHeight)||280;
@@ -420,6 +473,9 @@ function openCard(id,col){editing=id;
   const c=id?D().cards.find(x=>x.id===id):{title:"",meta:"",col:col||COLS[CUR][0][0],frente:"",notes:"",labels:[],checklist:[]};
   $("cardDlgTitle").textContent=id?"Editar tarjeta":"Nueva tarjeta";
   $("cTitle").value=c.title;$("cMeta").value=c.meta||"";$("cNotes").value=c.notes||"";$("cFrente").value=c.frente||"";
+  const _u=c.ultima||{},_g=c.siguiente||{};
+  $("cUltFecha").value=_u.fecha||"";$("cUltTexto").value=_u.texto||"";
+  $("cSigFecha").value=_g.fecha||"";$("cSigTexto").value=_g.texto||"";$("cSigQuien").value=_g.quien||"";
   $("cCol").innerHTML=COLS[CUR].map(k=>`<option value="${k[0]}">${k[1]}</option>`).join("");$("cCol").value=c.col;
   DTAGS=[...(c.labels||[])];DCK=(c.checklist||[]).map(i=>({...i}));
   DREM=id?(D().rems||[]).filter(r=>r.cardId===id).map(r=>({...r})):[];
@@ -437,7 +493,9 @@ $("cRemIn").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault(
 
 $("cardForm").onsubmit=e=>{e.preventDefault();const t=$("cTitle").value.trim();if(!t)return;
   const payload={title:t,meta:$("cMeta").value.trim(),notes:$("cNotes").value,col:$("cCol").value,
-    frente:$("cFrente").value.trim(),labels:[...DTAGS],checklist:DCK.filter(i=>i.text.trim())};
+    frente:$("cFrente").value.trim(),labels:[...DTAGS],checklist:DCK.filter(i=>i.text.trim()),
+    ultima:{fecha:$("cUltFecha").value||"",texto:$("cUltTexto").value.trim()},
+    siguiente:{fecha:$("cSigFecha").value||"",texto:$("cSigTexto").value.trim(),quien:$("cSigQuien").value.trim()}};
   let cid=editing;
   if(editing){Object.assign(D().cards.find(x=>x.id===editing),payload)}
   else{cid=uid();D().cards.push({id:cid,...payload})}
