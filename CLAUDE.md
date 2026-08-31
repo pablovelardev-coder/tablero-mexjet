@@ -19,6 +19,7 @@ Contexto del proyecto para retomar el trabajo en futuras sesiones.
 | Archivos locales de rutinas | **Solo en la Mac** | `~/.claude/scheduled-tasks/` |
 | Conocimiento por entidad (wiki) | Repo privado del vault | `pablovelardev-coder/segundo-cerebro` |
 | Respaldo de los tableros | Supabase → `boards_backup` | `where kind = … order by taken_at desc` |
+| Histórico de disponibilidad de flota | Supabase → `flota_dia`, `flota_evento` | solo conector admin; la app no las lee |
 
 ## Qué es
 
@@ -232,6 +233,21 @@ Ejemplos de lo que Pablo puede pedir desde cualquier dispositivo:
 - "¿Qué pendientes vencidos tengo en Dirección?"
 - "Agrega una tarjeta en el pipeline de Ventas: …"
 - "Marca como Hecha la tarea …" / "Mueve la tarjeta … a Negociación".
+
+Tablas **`flota_dia`** y **`flota_evento`** — serie histórica de disponibilidad
+de flota, alimentada desde el correo *DASHBOARD MEXJET*. No las usa la app: las
+escriben las rutinas cloud a través del conector de administrador.
+
+- **RLS activo y sin políticas**, más los permisos revocados a `anon` y
+  `authenticated` — mismo patrón que `boards_backup`.
+- ⚠️ **Estuvieron con RLS desactivado del 20 al 31-ago-2026.** Como la anon key
+  vive incrustada en el `index.html` de este repositorio *público*, durante esos
+  once días cualquiera pudo leer y modificar el historial de flota. Se cerró el
+  31-ago. La anon key **no** se rotó ni hacía falta: es pública por diseño, y el
+  problema era la falta de RLS, no la clave.
+- **Regla que deja el incidente:** una tabla nueva en este proyecto nace con RLS.
+  Si la escribe una rutina y no la app, va sin políticas y solo entra el conector
+  de administrador. Verificar con `get_advisors` después de crear cualquier tabla.
 
 > Nota: el mismo Supabase aloja además otro proyecto (tablas `users`,
 > `matches`, `predictions` — una quiniela de fútbol) y una tabla `assets`. No
