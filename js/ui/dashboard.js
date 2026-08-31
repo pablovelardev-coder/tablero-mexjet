@@ -42,9 +42,62 @@ function detiene(t) {
 
 const diasAtraso = t => { const d = diasDesde(t.due); return d !== null && d > 0 ? d : 0 };
 
-// Orden: primero lo más atrasado, y a igual atraso lo que detiene más cosas.
-// No pondera por valor de cuenta todavía: eso exige ligar el frente al CRM.
-const peso = t => diasAtraso(t) * 10 + detiene(t);
+/* ---------- Árbol de decisión (Pablo, 31-ago) ----------
+   Tres preguntas en orden de importancia, no una suma ponderada. Un "sí" en la
+   primera gana sobre cualquier cosa de la segunda: así no hay que inventar pesos
+   y Pablo puede auditar por qué algo salió arriba.
+
+     1. ¿Genera dinero?
+     2. ¿Se le debe a un externo o a alguien de jerarquía?
+     3. ¿Bloquea otra tarea?
+
+   El atraso ya no ordena: desempata. Una tarea vieja que no genera dinero ni
+   bloquea a nadie no debería encabezar el día solo por ser vieja.           */
+
+// ¿El frente genera (o protege) dinero? A diferencia del deudor, esto SÍ es
+// uniforme por frente, así que vive en el tablero y no en cada tarea.
+export function generaDinero(t) {
+  const mapa = D().dinero || {};
+  const f = t.frente || "";
+  if (f in mapa) return !!mapa[f];
+  return adivinaDinero(f);
+}
+
+// Primera pasada mientras Pablo no marque los frentes a mano.
+// Incluye retención: una queja de cliente no genera ingreso, pero perderlo cuesta.
+export const adivinaDinero = f => /comercial|cobranza|venta|prospecc|cliente|operaci/i.test(f || "");
+
+// Externo (cliente, proveedor, autoridad) o jerárquico (jefe) pesan más que interno.
+function esExternoOJerarquico(t) {
+  if (t.tipo) return t.tipo === "externo" || t.tipo === "jerarquico";
+  return /comercial|cobranza|cliente|backlog|prospecc/i.test(t.frente || "");
+}
+
+// Vector lexicográfico: se compara elemento por elemento, en orden.
+export function prioridad(t) {
+  return [
+    generaDinero(t)        ? 1 : 0,
+    esExternoOJerarquico(t) ? 1 : 0,
+    detiene(t) > 0          ? 1 : 0,
+    diasAtraso(t)
+  ];
+}
+
+const comparaPrioridad = (a, b) => {
+  const pa = prioridad(a), pb = prioridad(b);
+  for (let i = 0; i < pa.length; i++) if (pb[i] !== pa[i]) return pb[i] - pa[i];
+  return 0;
+};
+
+// Por qué quedó donde quedó. Se muestra en la tarjeta: sin esto el orden es magia.
+function razones(t) {
+  const r = [];
+  if (generaDinero(t)) r.push("💰 dinero");
+  if (esExternoOJerarquico(t)) r.push(t.tipo === "jerarquico" ? "▲ jerarquía" : "↗ externo");
+  const d = detiene(t);
+  if (d) r.push(`⛓ detiene ${d}`);
+  return r;
+}
 
 function fila(t, lado) {
   const inf = ladoDe(t);
@@ -64,6 +117,7 @@ function fila(t, lado) {
       ${atraso > 0 ? `<span class="atraso">${atraso} d tarde</span>` : t.due ? `<span class="alfecha">${t.due.slice(5)}</span>` : ""}
     </div>
     <div class="deuda-tx">${esc(clip(t.text || "", 190))}</div>
+    <div class="deuda-razones">${razones(t).map(x => `<span class="razon">${x}</span>`).join("") || `<span class="razon flojo">sin señal de prioridad</span>`}</div>
     <div class="deuda-pie">
       ${t.frente ? `<span class="deuda-frente">${esc(t.frente)}</span>` : ""}
       ${det ? `<button class="deuda-detiene" type="button">detiene ${det} más</button>` : ""}
@@ -93,14 +147,36 @@ function pintarMonton(contenedor, lista, lado, vacio) {
   lista.forEach(t => c.appendChild(fila(t, lado)));
 }
 
+// Los frentes que generan dinero: una casilla por frente, no por tarea.
+// Es la decisión que sí se puede tomar al por mayor.
+function pintarFrentesDinero(abiertos) {
+  const cont = $("dashDinero");
+  if (!cont) return;
+  const frentes = [...new Set(abiertos.map(t => t.frente).filter(Boolean))].sort();
+  const mapa = D().dinero || {};
+  cont.innerHTML = frentes.map(f => {
+    const marcado = (f in mapa) ? !!mapa[f] : adivinaDinero(f);
+    const inferido = !(f in mapa);
+    return `<label class="fdin${marcado ? " on" : ""}">
+      <input type="checkbox" data-f="${esc(f)}" ${marcado ? "checked" : ""}>
+      ${esc(f)}${inferido ? `<span class="inferido">inferido</span>` : ""}</label>`;
+  }).join("");
+  cont.querySelectorAll("input").forEach(chk => chk.onchange = () => {
+    D().dinero = { ...(D().dinero || {}), [chk.dataset.f]: chk.checked };
+    save();
+    renderDashboard();
+  });
+}
+
 export function renderDashboard() {
   const wrap = $("dashWrap");
   if (!wrap) return;
 
   const abiertos = (D().tasks || []).filter(t => t.status !== "Hecha");
-  const meDeben = abiertos.filter(t => ladoDe(t).lado === "me-deben").sort((a,b) => peso(b) - peso(a));
-  const debo    = abiertos.filter(t => ladoDe(t).lado === "debo").sort((a,b) => peso(b) - peso(a));
+  const meDeben = abiertos.filter(t => ladoDe(t).lado === "me-deben").sort(comparaPrioridad);
+  const debo    = abiertos.filter(t => ladoDe(t).lado === "debo").sort(comparaPrioridad);
 
+  pintarFrentesDinero(abiertos);
   $("dashMeDebenN").textContent = meDeben.length;
   $("dashDeboN").textContent = debo.length;
 

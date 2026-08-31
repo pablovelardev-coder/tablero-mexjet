@@ -146,3 +146,14 @@
   .deuda-frente{font-size:10px;background:var(--chip);color:var(--muted);border-radius:20px;padding:1px 7px}
   .deuda-detiene{font-size:10px;padding:1px 7px;border-radius:20px;color:var(--muted)}
   .deuda-in{font-size:11px;padding:3px 7px;margin-left:auto;width:130px;flex:none}
+
+  .dinbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:16px;box-shadow:var(--shadow)}
+  .dinbox summary{cursor:pointer;font-weight:600;font-size:13px}
+  .dinbox .sub{margin:8px 0 10px}
+  #dashDinero{display:flex;flex-wrap:wrap;gap:7px}
+  .fdin{display:inline-flex;align-items:center;gap:6px;font-size:12px;border:1px solid var(--line);border-radius:20px;padding:4px 11px;cursor:pointer;background:var(--bg);color:var(--muted)}
+  .fdin.on{border-color:var(--win);color:var(--win);font-weight:600}
+  .fdin input{margin:0}
+  .deuda-razones{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .razon{font-size:10px;background:var(--chip);color:var(--muted);border-radius:20px;padding:1px 7px}
+  .razon.flojo{opacity:.55;font-style:italic}

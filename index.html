@@ -33,15 +33,20 @@
   <main>
     <section class="view" data-v="hoy">
       <div id="dashWrap">
+        <details class="dinbox">
+          <summary>💰 ¿Qué frentes generan o protegen dinero?</summary>
+          <p class="sub">Primera pregunta del orden: un frente que genera dinero gana sobre cualquier otra señal. Marcado a mano una vez, sirve para todos sus pendientes.</p>
+          <div id="dashDinero"></div>
+        </details>
         <div class="dash">
           <div class="monton">
             <h3 class="monton-t">⬅ Me deben <span class="count" id="dashMeDebenN">0</span></h3>
-            <p class="sub">La acción es presionar. Ordenado por atraso y por cuánto detiene.</p>
+            <p class="sub">La acción es presionar. Orden: genera dinero → se le debe a externo o jefe → bloquea algo. El atraso solo desempata.</p>
             <div id="dashMeDeben"></div>
           </div>
           <div class="monton">
             <h3 class="monton-t">➡ Yo debo <span class="count" id="dashDeboN">0</span></h3>
-            <p class="sub">La acción es entregar. Aquí el bloqueo eres tú.</p>
+            <p class="sub">La acción es entregar: aquí el bloqueo eres tú. Mismo orden que el otro montón.</p>
             <div id="dashDebo"></div>
           </div>
         </div>
