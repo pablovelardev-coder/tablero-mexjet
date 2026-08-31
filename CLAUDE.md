@@ -278,22 +278,35 @@ archivos). El catálogo completo con el prompt exacto de cada una está en
 
 ### Rutinas cloud (Routines de Claude Code, con `trigger_id`)
 
-**Tres activas**, lunes a viernes, encadenadas de forma que el respaldo corre
-antes del parte y el parte encuentra los datos ya asegurados:
+**Cuatro activas.** Verificado contra la API el 31-ago-2026.
 
-| Hora (Monterrey) | Rutina | Qué hace | Push |
-|---|---|---|---|
-| **07:10** | Respaldo de tableros | snapshot a `boards_backup`, purga >90 días y **alerta si un tablero quedó vacío o perdió >30% de tarjetas** | sí |
-| **07:20** | Parte matutino completo | juntas del día · estatus de flota · incidencias · quejas de clientes · pendientes de Dirección agrupados por departamento · pipeline de Ventas · leads del buzón | sí + correo |
-| 07:00 | Pipeline de ventas | oportunidades en Negociación y Propuesta, y el riesgo de flota 2028 | — |
+| Hora (Monterrey) | Días | Rutina | Qué hace | Conectores |
+|---|---|---|---|---|
+| **06:45** | todos | Captura diaria de flota | parsea el correo *DASHBOARD MEXJET* y lo escribe en `flota_dia` y `flota_evento`. Solo captura: no analiza, no notifica | Gmail, Supabase |
+| **07:10** | lun-vie | Respaldo de tableros | snapshot a `boards_backup`, purga >90 días y **alerta si un tablero quedó vacío o perdió >30% de tarjetas** | Supabase |
+| **08:00** | lunes | Revisión de salud | vencidos, acciones sin cerrar, integridad de los tableros. **Solo lee** | Supabase |
+| **09:00 · 13:00 · 17:00** | lun-vie | Monitoreo `info@ale.mx` | tría el buzón general, marca 🔴 lo que toca **Monterrey** y **escribe los leads reales al tablero de Ventas**, columna `lead` | Gmail, Supabase |
 
-**Cuatro desactivadas** por haberse consolidado en *Parte matutino completo*:
-Resumen matutino · Estatus de flota · Pendientes de Dirección · Monitoreo del
-buzón. Se conservan por si hace falta volver a separarlas.
+**Cinco desactivadas:** Parte matutino completo · Estatus de flota e incidencias ·
+Resumen matutino · Pipeline de ventas · Pendientes de Dirección. Se conservan por
+si hace falta volver a encenderlas.
 
-> Consolidado el 2026-08-01. Antes había seis rutinas, cinco a la misma hora y
-> con contenido traslapado; además varias tenían el canal de notificación sin
-> configurar, y por eso su resultado nunca llegaba al teléfono.
+> ⚠️ **El parte matutino ya no corre en la nube.** Decisión de Pablo (21-ago): lo
+> quiere disparar **desde una sesión en el celular**, para poder dar indicaciones
+> y corregir sobre la marcha mientras planea el día. Una rutina que solo deposita
+> un texto no le sirve para eso.
+
+> **El monitoreo del buzón estuvo apagado del 24-jul al 31-ago-2026** y en ese mes
+> se acumularon las solicitudes sin triar — entre ellas un lead de JetCard de
+> Johnson Controls. Al reactivarlo se le cambió el diseño de entrega: antes solo
+> emitía un reporte, que Pablo no llegaba a ver porque **las notificaciones nunca
+> le llegan al teléfono**; ahora **escribe la tarjeta en el tablero**, que sí abre.
+> El reporte quedó como respaldo, no como la entrega.
+
+> **Lección de catálogo:** este bloque decía «tres activas» y listaba el parte
+> matutino como la principal, cuando llevaba semanas apagado, y no mencionaba dos
+> rutinas que sí corrían. Un catálogo que no se verifica contra la API envejece
+> mal y hace tomar decisiones sobre una realidad que ya no existe.
 
 ### Rutinas locales (`~/.claude/scheduled-tasks/`, solo Mac)
 
@@ -372,10 +385,9 @@ reautorizar y reintentar, o dejar la acción en el buzón (ver patrón arriba).
   sensible, aunque el repo sea privado.
 - [ ] **Taxonomía de tags sin control.** ~90 tags distintos en `session_log`, la
   mayoría usados una sola vez; degrada la búsqueda. Falta vocabulario corto.
-- [ ] **Sin rutina de salud.** Nadie revisa vencidos, acciones sin cerrar ni
-  notas huérfanas. Ya hubo un recordatorio que venció sin ejecutarse. *(La
-  rutina de respaldo ya vigila la integridad de los tableros, pero no la salud
-  de los pendientes.)*
+- [x] ~~**Sin rutina de salud.**~~ **Resuelto:** existe *Revisión de salud*, los
+  lunes a las 8:00, que revisa vencidos, acciones sin cerrar e integridad de los
+  tableros. Solo lee, nunca modifica.
 - [x] ~~**Rutinas cloud solapadas.**~~ **Resuelto 2026-08-01:** tres activas,
   encadenadas y con push encendido; cuatro desactivadas.
 - [ ] **Sin automatización de commit/push del vault.** Hoy es manual desde la
