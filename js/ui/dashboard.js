@@ -66,7 +66,11 @@ const diasAtraso = t => { const d = diasDesde(t.due); return d !== null && d > 0
 //   "Miguel"  → Miguel Ángel González (jefe) vs Miguel Padrón (proveedor) vs Miguel Garza (cliente)
 //   "Ponce"   → Alejandro/Alex Ponce (jefe) vs Daniela Ponce (otra persona)
 //   "Arturo"  → Arturo Ortega (jefe) vs "el mecánico Arturo" vs "el depa de Arturo"
+//   "Sierra"  → Manuel Sierra (CEO) vs una dirección de inmueble en Guadalupe
+//   "Salazar" → Rodrigo Salazar (dir. ventas) vs Claudia, Karina y Laura Salazar
 const JEFES = [
+  /manuel\s+sierra/i,     // CEO de Aerolíneas Ejecutivas
+  /rodrigo\s+salazar/i,   // Director de ventas MexJet
   /santiago\s+ortega/i,
   /miguel\s+[áa]ngel(\s+gonz[áa]lez)?/i,
   /(alejandro|alex)\s+ponce/i,
