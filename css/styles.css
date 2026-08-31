@@ -157,3 +157,10 @@
   .deuda-razones{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
   .razon{font-size:10px;background:var(--chip);color:var(--muted);border-radius:20px;padding:1px 7px}
   .razon.flojo{opacity:.55;font-style:italic}
+
+  .ftab{font-size:12px}
+  .ftab th{font-size:11px;white-space:nowrap}
+  .ftab td{padding:5px 11px}
+  .ftab td:nth-child(n+2),.ftab th:nth-child(n+2){width:78px;text-align:center}
+  .ftab input{width:auto;margin:0}
+  .ftab .inferido{margin-left:5px;font-size:9px}

@@ -43,16 +43,52 @@ function detiene(t) {
 const diasAtraso = t => { const d = diasDesde(t.due); return d !== null && d > 0 ? d : 0 };
 
 /* ---------- Árbol de decisión (Pablo, 31-ago) ----------
-   Tres preguntas en orden de importancia, no una suma ponderada. Un "sí" en la
+   Preguntas en orden de importancia, no una suma ponderada. Un "sí" en la
    primera gana sobre cualquier cosa de la segunda: así no hay que inventar pesos
    y Pablo puede auditar por qué algo salió arriba.
 
-     1. ¿Genera dinero?
-     2. ¿Se le debe a un externo o a alguien de jerarquía?
-     3. ¿Bloquea otra tarea?
+     1. ¿Impacta el bono?   ← "todo lo que impacta en bono es prioridad" (Pablo)
+     2. ¿Genera —o protege— dinero?
+     3. ¿Se le debe a un externo o a alguien de jerarquía?
+     4. ¿Bloquea otra tarea?
 
    El atraso ya no ordena: desempata. Una tarea vieja que no genera dinero ni
-   bloquea a nadie no debería encabezar el día solo por ser vieja.           */
+   bloquea a nadie no debería encabezar el día solo por ser vieja.
+
+   El bono va arriba de "dinero" porque es dinero de Pablo, no de la empresa,
+   y porque sus indicadores dependen de terceros: si no se empujan, no se
+   evalúan. Las quejas de clientes entran aquí vía la hoja Afectaciones.     */
+
+// Jefes y directores. La deuda con ellos pesa más que con un par.
+//
+// ⚠️ Nombres COMPLETOS a propósito. Verificado contra los tableros y el índice
+// de personas del vault, donde los nombres sueltos chocan con otras personas:
+//   "Miguel"  → Miguel Ángel González (jefe) vs Miguel Padrón (proveedor) vs Miguel Garza (cliente)
+//   "Ponce"   → Alejandro/Alex Ponce (jefe) vs Daniela Ponce (otra persona)
+//   "Arturo"  → Arturo Ortega (jefe) vs "el mecánico Arturo" vs "el depa de Arturo"
+const JEFES = [
+  /santiago\s+ortega/i,
+  /miguel\s+[áa]ngel(\s+gonz[áa]lez)?/i,
+  /(alejandro|alex)\s+ponce/i,
+  /isabel/i,               // Isabel de RRHH — apellido por confirmar, único en los datos
+  /arturo\s+ortega/i,
+  /\bdirector(a|es)?\b/i  // cualquier director, por título
+];
+
+const mencionaJefe = s => JEFES.some(rx => rx.test(s || ""));
+
+// ¿Impacta el bono? Explícito, o la tarea lo dice, o su frente está marcado.
+export function impactaBono(t) {
+  if (typeof t.bono === "boolean") return t.bono;
+  if (/^\s*bono\b|impacta\w*\s+(en\s+)?(el\s+)?bono/i.test(t.text || "")) return true;
+  const mapa = (D() || {}).bonoFrentes || {};
+  const f = t.frente || "";
+  if (f in mapa) return !!mapa[f];
+  return adivinaBono(f);
+}
+
+// Quejas y afectaciones alimentan la hoja Afectaciones, que es indicador del bono.
+export const adivinaBono = f => /operaci[oó]n|cliente/i.test(f || "");
 
 // ¿El frente genera (o protege) dinero? A diferencia del deudor, esto SÍ es
 // uniforme por frente, así que vive en el tablero y no en cada tarea.
@@ -70,12 +106,18 @@ export const adivinaDinero = f => /comercial|cobranza|venta|prospecc|cliente|ope
 // Externo (cliente, proveedor, autoridad) o jerárquico (jefe) pesan más que interno.
 function esExternoOJerarquico(t) {
   if (t.tipo) return t.tipo === "externo" || t.tipo === "jerarquico";
+  if (mencionaJefe(t.deudor) || mencionaJefe(t.acreedor) || mencionaJefe(t.text)) return true;
   return /comercial|cobranza|cliente|backlog|prospecc/i.test(t.frente || "");
 }
+
+// Distingue jerarquía de externo, para que la etiqueta diga la verdad.
+const esJerarquia = t => t.tipo === "jerarquico"
+  || mencionaJefe(t.deudor) || mencionaJefe(t.acreedor) || mencionaJefe(t.text);
 
 // Vector lexicográfico: se compara elemento por elemento, en orden.
 export function prioridad(t) {
   return [
+    impactaBono(t)         ? 1 : 0,
     generaDinero(t)        ? 1 : 0,
     esExternoOJerarquico(t) ? 1 : 0,
     detiene(t) > 0          ? 1 : 0,
@@ -92,8 +134,9 @@ const comparaPrioridad = (a, b) => {
 // Por qué quedó donde quedó. Se muestra en la tarjeta: sin esto el orden es magia.
 function razones(t) {
   const r = [];
+  if (impactaBono(t)) r.push("🎯 bono");
   if (generaDinero(t)) r.push("💰 dinero");
-  if (esExternoOJerarquico(t)) r.push(t.tipo === "jerarquico" ? "▲ jerarquía" : "↗ externo");
+  if (esExternoOJerarquico(t)) r.push(esJerarquia(t) ? "▲ jerarquía" : "↗ externo");
   const d = detiene(t);
   if (d) r.push(`⛓ detiene ${d}`);
   return r;
@@ -153,16 +196,25 @@ function pintarFrentesDinero(abiertos) {
   const cont = $("dashDinero");
   if (!cont) return;
   const frentes = [...new Set(abiertos.map(t => t.frente).filter(Boolean))].sort();
-  const mapa = (D() || {}).dinero || {};
-  cont.innerHTML = frentes.map(f => {
-    const marcado = (f in mapa) ? !!mapa[f] : adivinaDinero(f);
-    const inferido = !(f in mapa);
-    return `<label class="fdin${marcado ? " on" : ""}">
-      <input type="checkbox" data-f="${esc(f)}" ${marcado ? "checked" : ""}>
-      ${esc(f)}${inferido ? `<span class="inferido">inferido</span>` : ""}</label>`;
-  }).join("");
+  const dn = (D() || {}).dinero || {}, bn = (D() || {}).bonoFrentes || {};
+
+  cont.innerHTML = `<table class="ftab"><thead><tr>
+      <th>Frente</th>
+      <th title="Todo lo que impacta el bono es prioridad">🎯 bono</th>
+      <th>💰 dinero</th>
+    </tr></thead><tbody>` +
+    frentes.map(f => {
+      const b = (f in bn) ? !!bn[f] : adivinaBono(f);
+      const d = (f in dn) ? !!dn[f] : adivinaDinero(f);
+      return `<tr><td>${esc(f)}</td>
+        <td><input type="checkbox" data-k="bono" data-f="${esc(f)}" ${b ? "checked" : ""}>${(f in bn) ? "" : `<span class="inferido">inf</span>`}</td>
+        <td><input type="checkbox" data-k="dinero" data-f="${esc(f)}" ${d ? "checked" : ""}>${(f in dn) ? "" : `<span class="inferido">inf</span>`}</td></tr>`;
+    }).join("") + `</tbody></table>`;
+
   cont.querySelectorAll("input").forEach(chk => chk.onchange = () => {
-    D().dinero = { ...(D().dinero || {}), [chk.dataset.f]: chk.checked };
+    const clave = chk.dataset.k === "bono" ? "bonoFrentes" : "dinero";
+    const d = D();
+    d[clave] = { ...(d[clave] || {}), [chk.dataset.f]: chk.checked };
     save();
     renderDashboard();
   });
