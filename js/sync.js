@@ -42,8 +42,11 @@ export function save() {
 
 // Sincronización entre pestañas y dispositivos. Ignora el eco de la escritura
 // propia durante 1.5s para no repintar encima de lo que el usuario está haciendo.
+let canal = null;
+
 export function subscribeBoards(onRemoteChange) {
-  sb.channel("boards-rt")
+  if (canal) return canal;   // ya suscrito: no acumular canales
+  canal = sb.channel("boards-rt")
     .on("postgres_changes", { event:"*", schema:"public", table:"boards" }, payload => {
       const row = payload.new;
       if (!row || !row.kind) return;
@@ -52,4 +55,5 @@ export function subscribeBoards(onRemoteChange) {
       if (row.kind === app.cur) onRemoteChange();
     })
     .subscribe();
+  return canal;
 }

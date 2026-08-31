@@ -74,7 +74,9 @@ const JEFES = [
   /santiago\s+ortega/i,
   /miguel\s+[áa]ngel(\s+gonz[áa]lez)?/i,
   /(alejandro|alex)\s+ponce/i,
-  /isabel/i,               // Isabel de RRHH — apellido por confirmar, único en los datos
+  // Isabel Avelarde, de RRHH. Se aceptan las dos formas porque los pendientes
+  // ya escritos dicen "ISABEL DE RRHH" (se capturaron sin el apellido).
+  /isabel\s+(avelarde|de\s+rrhh)/i,
   /arturo\s+ortega/i,
   /\bdirector(a|es)?\b/i  // cualquier director, por título
 ];
