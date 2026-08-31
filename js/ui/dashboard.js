@@ -36,8 +36,8 @@ export function ladoDe(t) {
 // Qué detiene esta deuda: lo demás que sigue abierto en su mismo frente.
 // Se deduce del frente en vez de capturarse a mano.
 function detiene(t) {
-  if (!t.frente) return 0;
-  return D().tasks.filter(o => o.id !== t.id && o.status !== "Hecha" && (o.frente||"") === t.frente).length;
+  if (!t.frente || !D()) return 0;
+  return (D().tasks || []).filter(o => o.id !== t.id && o.status !== "Hecha" && (o.frente||"") === t.frente).length;
 }
 
 const diasAtraso = t => { const d = diasDesde(t.due); return d !== null && d > 0 ? d : 0 };
@@ -57,7 +57,7 @@ const diasAtraso = t => { const d = diasDesde(t.due); return d !== null && d > 0
 // ¿El frente genera (o protege) dinero? A diferencia del deudor, esto SÍ es
 // uniforme por frente, así que vive en el tablero y no en cada tarea.
 export function generaDinero(t) {
-  const mapa = D().dinero || {};
+  const mapa = (D() || {}).dinero || {};
   const f = t.frente || "";
   if (f in mapa) return !!mapa[f];
   return adivinaDinero(f);
@@ -153,7 +153,7 @@ function pintarFrentesDinero(abiertos) {
   const cont = $("dashDinero");
   if (!cont) return;
   const frentes = [...new Set(abiertos.map(t => t.frente).filter(Boolean))].sort();
-  const mapa = D().dinero || {};
+  const mapa = (D() || {}).dinero || {};
   cont.innerHTML = frentes.map(f => {
     const marcado = (f in mapa) ? !!mapa[f] : adivinaDinero(f);
     const inferido = !(f in mapa);
@@ -172,6 +172,7 @@ export function renderDashboard() {
   const wrap = $("dashWrap");
   if (!wrap) return;
 
+  if (!D()) return;
   const abiertos = (D().tasks || []).filter(t => t.status !== "Hecha");
   const meDeben = abiertos.filter(t => ladoDe(t).lado === "me-deben").sort(comparaPrioridad);
   const debo    = abiertos.filter(t => ladoDe(t).lado === "debo").sort(comparaPrioridad);
