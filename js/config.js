@@ -17,12 +17,12 @@ export const COLS = {
 // Orden de las pestañas por tablero
 export const TABS = {
   ventas: ["pipeline","pendientes","recordatorios","frentes"],
-  direccion: ["pendientes","recordatorios","frentes","pipeline"],
+  direccion: ["hoy","pendientes","recordatorios","frentes","pipeline"],
   personal: ["pipeline","pendientes","recordatorios"]
 };
 
 export const STATUSES = ["Por hacer","En curso","Bloqueada","Hecha"];
 
-export const TAB_LABELS = { pipeline:"Pipeline", pendientes:"Pendientes", recordatorios:"Recordatorios", frentes:"Frentes" };
+export const TAB_LABELS = { hoy:"Hoy", pipeline:"Pipeline", pendientes:"Pendientes", recordatorios:"Recordatorios", frentes:"Frentes" };
 
 export const TAGPAL = ["#0b5fff","#16a34a","#f97316","#8b5cf6","#dc2626","#0891b2","#b45309","#db2777","#4d7c0f","#475569"];

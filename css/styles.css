@@ -125,3 +125,24 @@
   .remrow input[type=date]{width:140px;flex:none}
   .badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;background:var(--chip);color:var(--muted);border-radius:20px;padding:1px 7px;margin-right:4px}
   .badge.warn{background:#fef3c7;color:#92400e}.badge.over{background:#fee2e2;color:#991b1b}
+
+  /* Pestaña Hoy — los dos montones de deuda */
+  .dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+  .monton{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow)}
+  .monton-t{margin:0 0 2px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+  .monton .sub{margin:0 0 12px}
+  .deuda{border:1px solid var(--line);border-left:3px solid var(--muted);border-radius:9px;padding:9px 10px;margin-bottom:9px;background:var(--bg)}
+  .deuda.tarde{border-left-color:var(--warn)}
+  .deuda.grave{border-left-color:var(--lost)}
+  .deuda-cab{display:flex;align-items:center;gap:7px;margin-bottom:4px;flex-wrap:wrap}
+  .deuda-quien{font-weight:700;font-size:13px}
+  .deuda-quien .sin{color:var(--muted);font-weight:400}
+  .inferido{font-size:10px;background:var(--chip);color:var(--muted);border-radius:20px;padding:1px 7px;cursor:help}
+  .atraso{font-size:11px;font-weight:700;color:var(--lost);margin-left:auto}
+  .deuda.grave .atraso{background:#fee2e2;color:#991b1b;border-radius:20px;padding:1px 7px}
+  .alfecha{font-size:11px;color:var(--muted);margin-left:auto}
+  .deuda-tx{font-size:12.5px;line-height:1.4;color:var(--ink)}
+  .deuda-pie{display:flex;align-items:center;gap:7px;margin-top:7px;flex-wrap:wrap}
+  .deuda-frente{font-size:10px;background:var(--chip);color:var(--muted);border-radius:20px;padding:1px 7px}
+  .deuda-detiene{font-size:10px;padding:1px 7px;border-radius:20px;color:var(--muted)}
+  .deuda-in{font-size:11px;padding:3px 7px;margin-left:auto;width:130px;flex:none}

@@ -31,6 +31,23 @@
   </header>
   <div class="tabs" id="tabs"></div>
   <main>
+    <section class="view" data-v="hoy">
+      <div id="dashWrap">
+        <div class="dash">
+          <div class="monton">
+            <h3 class="monton-t">⬅ Me deben <span class="count" id="dashMeDebenN">0</span></h3>
+            <p class="sub">La acción es presionar. Ordenado por atraso y por cuánto detiene.</p>
+            <div id="dashMeDeben"></div>
+          </div>
+          <div class="monton">
+            <h3 class="monton-t">➡ Yo debo <span class="count" id="dashDeboN">0</span></h3>
+            <p class="sub">La acción es entregar. Aquí el bloqueo eres tú.</p>
+            <div id="dashDebo"></div>
+          </div>
+        </div>
+        <p class="sub" id="dashSinAsignar" style="margin-top:14px"></p>
+      </div>
+    </section>
     <section class="view on" data-v="pipeline"><div class="board" id="board"></div></section>
     <section class="view" data-v="pendientes">
       <p class="sub">Vencidas en rojo, próximas (7 días) en ámbar.</p>
