@@ -1,7 +1,9 @@
 // Punto de entrada: engancha los módulos y arranca cuando hay sesión.
 import { app } from "./state.js";
 import { loadBoard, subscribeBoards, setSync } from "./sync.js";
-import { buildTabs, initBoardSwitch } from "./nav.js";
+import { buildTabs, initBoardSwitch, onTemaChange } from "./nav.js";
+import { esSeccion } from "./config.js";
+import { cargarFeed, renderFeed } from "./ui/feed.js";
 import { renderAll } from "./render.js";
 import { initAuth } from "./auth.js";
 import { initCardDialog } from "./ui/card-dialog.js";
@@ -24,7 +26,12 @@ initAuth();
 initCardDialog();
 initTasks();
 initRems();
-initBoardSwitch(() => { buildTabs(); renderAll() });
+initBoardSwitch(() => {
+  buildTabs();
+  if (esSeccion(app.cur)) cargarFeed(app.cur);   // lee `feed`, no `boards`
+  else renderAll();
+});
+onTemaChange(renderFeed);
 
 on("sesion-iniciada", start);
 on("datos-cambiaron", renderAll);

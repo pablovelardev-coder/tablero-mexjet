@@ -1,6 +1,6 @@
 // Cambio de tablero y de pestaña. Solo alterna clases: no repinta ni guarda,
 // para que ningún módulo de render tenga que importar a este.
-import { TABS, TAB_LABELS } from "./config.js";
+import { TABS, TAB_LABELS, SECCIONES, esSeccion } from "./config.js";
 import { app } from "./state.js";
 import { $ } from "./util.js";
 
@@ -13,6 +13,22 @@ function rotuloTab(v) {
 export function buildTabs() {
   const t = $("tabs");
   t.innerHTML = "";
+
+  // Las secciones transversales no tienen vistas fijas: sus pestañas son temas.
+  if (esSeccion(app.cur)) {
+    const temas = SECCIONES[app.cur].temas;
+    if (!temas.some(x => x.id === app.curtab)) app.curtab = temas[0].id;
+    temas.forEach(tema => {
+      const el = document.createElement("div");
+      el.className = "tab" + (tema.id === app.curtab ? " on" : "") + (tema.destacado ? " destacado" : "");
+      el.textContent = tema.rotulo;
+      el.onclick = () => mostrarTema(tema.id);
+      t.appendChild(el);
+    });
+    document.querySelectorAll(".view").forEach(s => s.classList.toggle("on", s.dataset.v === "feed"));
+    return;
+  }
+
   TABS[app.cur].forEach(v => {
     const el = document.createElement("div");
     el.className = "tab" + (v === app.curtab ? " on" : "");
@@ -21,6 +37,18 @@ export function buildTabs() {
     t.appendChild(el);
   });
   document.querySelectorAll(".view").forEach(s => s.classList.toggle("on", s.dataset.v === app.curtab));
+}
+
+// Cambia de tema dentro de una sección. Avisa por callback para no importar el render.
+let alCambiarTema = () => {};
+export const onTemaChange = fn => { alCambiarTema = fn };
+
+export function mostrarTema(id) {
+  app.curtab = id;
+  const temas = SECCIONES[app.cur].temas;
+  const idx = temas.findIndex(x => x.id === id);
+  document.querySelectorAll(".tab").forEach((x, i) => x.classList.toggle("on", i === idx));
+  alCambiarTema();
 }
 
 export function showTab(v) {

@@ -25,12 +25,21 @@
   <header>
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
       <h1 class="title">✈️ Tablero MexJet</h1>
-      <div class="switch"><button data-b="ventas" class="on">Ventas</button><button data-b="direccion">Dirección</button><button data-b="personal">Personal</button></div>
+      <div class="switch"><button data-b="ventas" class="on">Ventas</button><button data-b="direccion">Dirección</button><button data-b="personal">Personal</button><button data-b="capacitacion">Capacitación</button><button data-b="entretenimiento">Entretenimiento</button></div>
     </div>
     <div class="right"><span class="sync" id="sync">·</span><button class="mini" id="btnOut">Salir</button></div>
   </header>
   <div class="tabs" id="tabs"></div>
   <main>
+    <section class="view" data-v="feed">
+      <div id="feedWrap">
+        <h3 class="monton-t" id="feedTitulo"></h3>
+        <p class="sub" id="feedNota"></p>
+        <p class="sub" id="feedSinLeer"></p>
+        <div id="feedLista"></div>
+      </div>
+    </section>
+
     <section class="view" data-v="hoy">
       <div id="dashWrap">
         <details class="dinbox">

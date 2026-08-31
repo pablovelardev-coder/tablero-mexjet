@@ -26,3 +26,37 @@ export const STATUSES = ["Por hacer","En curso","Bloqueada","Hecha"];
 export const TAB_LABELS = { hoy:"Hoy", pipeline:"Pipeline", pendientes:"Pendientes", recordatorios:"Recordatorios", frentes:"Frentes" };
 
 export const TAGPAL = ["#0b5fff","#16a34a","#f97316","#8b5cf6","#dc2626","#0891b2","#b45309","#db2777","#4d7c0f","#475569"];
+
+/* ---------- Secciones transversales (Capacitación y Entretenimiento) ----------
+   No son tableros: no tienen columnas ni pendientes. Leen de la tabla `feed`,
+   una fila por pieza de contenido. Sus "pestañas" son los temas.
+
+   Los temas los dictó Pablo el 31-ago. El primero de Capacitación no es
+   capacitación: es inteligencia comercial —una planta nueva en Apodaca, una
+   expansión anunciada en NL, un cambio de directivo son leads antes que
+   noticias— y por eso va primero, destacado y con su propia `seccion`.       */
+export const SECCIONES = {
+  capacitacion: {
+    rotulo: "Capacitación",
+    temas: [
+      { id:"inteligencia", rotulo:"Inteligencia comercial", seccion:"inteligencia", destacado:true },
+      { id:"tecnologia",   rotulo:"Tecnología",             seccion:"capacitacion" },
+      { id:"ia",           rotulo:"IA",                     seccion:"capacitacion" },
+      { id:"finanzas",     rotulo:"Finanzas",               seccion:"capacitacion" },
+      { id:"inversiones",  rotulo:"Inversiones",            seccion:"capacitacion" }
+    ]
+  },
+  entretenimiento: {
+    rotulo: "Entretenimiento",
+    temas: [
+      { id:"deportistas", rotulo:"Mexicanos en el extranjero", seccion:"entretenimiento" },
+      { id:"rayados",     rotulo:"Rayados",                    seccion:"entretenimiento" },
+      { id:"cowboys",     rotulo:"Cowboys",                    seccion:"entretenimiento" },
+      { id:"f1",          rotulo:"F1",                         seccion:"entretenimiento" },
+      { id:"yoga",        rotulo:"Yoga",                       seccion:"entretenimiento" },
+      { id:"salud",       rotulo:"Estudios de salud",          seccion:"entretenimiento" }
+    ]
+  }
+};
+
+export const esSeccion = k => k in SECCIONES;

@@ -181,3 +181,21 @@
   .salud.mal{border-color:var(--lost)}.salud.mal b{color:var(--lost)}
   .salud-detalle{font-size:11.5px;color:var(--muted);margin-top:10px}
   .salud-detalle ul{margin:4px 0 0;padding-left:18px}
+
+  /* Secciones transversales — contenido curado */
+  .tab.destacado{color:var(--win)}
+  .tab.destacado.on{border-bottom-color:var(--panel)}
+  .monton-t.destacado{color:var(--win)}
+  #feedLista{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-top:12px}
+  .pieza{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px}
+  .pieza.leida{opacity:.6}
+  .pieza.guardada{border-left:3px solid var(--calif)}
+  .pieza-cab{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--muted)}
+  .fuente{background:var(--chip);border-radius:20px;padding:1px 8px}
+  .pieza-fecha{margin-left:auto}
+  .pieza h4{margin:0;font-size:14px;line-height:1.35}
+  .pieza p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.45}
+  .pieza-pie{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:auto;padding-top:6px}
+  .pieza-pie a{font-size:11px;color:var(--accent);text-decoration:none;margin-right:auto}
+  .pieza-pie a:hover{text-decoration:underline}
+  .pieza-pie .mini{font-size:10.5px;padding:2px 8px}

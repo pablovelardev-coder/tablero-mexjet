@@ -69,6 +69,24 @@ Tabla **`boards`** con:
   para sincronizar entre pestañas/dispositivos. Ignora el "eco" de la propia
   escritura durante 1.5s (`lastWrite`).
 
+Tabla **`feed`** — contenido curado de Capacitación, Entretenimiento e
+Inteligencia comercial. **Una fila por pieza**, no un JSON monolítico:
+
+| Columna | Notas |
+|---|---|
+| `user_id` | dueño (FK a auth.users), con RLS por usuario |
+| `seccion` | `capacitacion` \| `entretenimiento` \| `inteligencia` |
+| `tema` | `ia`, `finanzas`, `rayados`, `f1`… |
+| `titulo`, `resumen`, `fuente_url`, `fuente_nombre`, `publicado_at` | la pieza |
+| `leido`, `guardado`, `descartado` | estado por pieza |
+
+- **RLS activo con 4 políticas** (`user_id = auth.uid()`) desde su creación.
+- Índice único `(user_id, fuente_url)`: la rutina de curación corre a diario y
+  sin eso insertaría el mismo artículo en cada corrida.
+- ⚠️ **Regla de oro:** el contenido se **inserta y actualiza fila por fila**.
+  Cada acción de la app es un `UPDATE` de un solo campo de una sola fila. Así el
+  bug que vació los tableros dos veces no puede repetirse aquí.
+
 Tabla **`boards_backup`** — snapshots de `boards`:
 
 | Columna | Notas |
