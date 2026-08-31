@@ -434,6 +434,21 @@ por id que ningún elemento de ningún respaldo de los últimos 7 días faltara.
    si antes tenía contenido. No depende de la app: aplica a cualquier cliente.
    Es la defensa que faltaba desde el 1-ago.
 2. La regla de pruebas de abajo.
+3. 🔒 **`loadBoard` ya no escribe** (`js/sync.js`) — *aplicado el 31-ago por la
+   tarde*. La rama `else` sembraba el estado vacío **y lo hacía `upsert`**; ahora
+   el seed se queda solo en memoria y la fila se crea cuando el usuario actúa.
+   Ese `upsert` al arrancar es el mecanismo común de los dos borrados: lo dispara
+   cualquier cosa que deje la consulta sin fila —sesión que aún no autentica, RLS
+   que filtra, un hipo de red que no llega a marcarse como `error`, o un estado
+   vacío inyectado en una prueba—. El comentario de la cabecera del archivo decía
+   que `save()` nunca corre al arrancar, y era cierto; el hueco era que
+   `loadBoard` no llamaba a `save()` sino a `upsert()` directo.
+4. 🔒 **Candado en `upsert()`** — se niega a escribir un tablero que esté vacío en
+   memoria, antes de salir a la red. Complementa al trigger: la base es la última
+   línea, ésta es la primera.
+
+> Las cuatro medidas son de capas distintas a propósito: la app puede fallar y el
+> dato sobrevive; la base puede no tener el trigger y el cliente ya no lo intenta.
 
 **Lección.** El respaldo salvó los datos, pero el respaldo es la última línea,
 no la primera. Lo que faltaba era que la base **se negara** a quedarse vacía.

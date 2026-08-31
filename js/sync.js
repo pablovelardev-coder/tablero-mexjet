@@ -21,10 +21,27 @@ export async function loadBoard(kind) {
   const { data, error } = await sb.from("boards").select("data").eq("kind",kind).maybeSingle();
   if (error) { setSync("error"); return }
   if (data && data.data) { S[kind] = data.data }
-  else { S[kind] = seed(kind); await upsert(kind) }
+  // ⚠️ NUNCA escribir desde aquí. Si la consulta no trajo fila —porque la sesion
+  // todavia no autentica, porque RLS la filtro, o por un hipo de red que no llego
+  // a marcarse como error— el seed se queda SOLO EN MEMORIA. La fila se crea
+  // cuando el usuario haga algo, via save(). Este upsert al arrancar fue lo que
+  // borro los tres tableros el 1-ago y el 31-ago-2026.
+  else { S[kind] = seed(kind) }
+}
+
+// Segundo candado, del lado del cliente. El primero es el trigger
+// `boards_rechaza_vaciado_trg` en la base. Aqui se evita siquiera intentarlo:
+// un tablero sin tarjetas, sin pendientes y sin recordatorios no se escribe.
+function estaVacio(b) {
+  return !b || (!(b.cards||[]).length && !(b.tasks||[]).length && !(b.rems||[]).length);
 }
 
 export async function upsert(kind) {
+  if (estaVacio(S[kind])) {
+    console.warn("upsert cancelado: el tablero", kind, "esta vacio en memoria. No se escribe.");
+    setSync("error");
+    return;
+  }
   lastWrite[kind] = Date.now();
   const { error } = await sb.from("boards").upsert(
     { user_id: app.user.id, kind, data: S[kind], updated_at: new Date().toISOString() },
