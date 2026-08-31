@@ -29,8 +29,9 @@ estática de una sola página, servida por **GitHub Pages** en:
 
 ## Arquitectura
 
-- **Frontend:** todo vive en un único `index.html` (HTML + CSS + JavaScript
-  vanilla, sin paso de build ni framework). Se importa
+- **Frontend:** HTML + CSS + JavaScript vanilla, **sin paso de build ni
+  framework**. Repartido en módulos ES nativos (`js/`), que GitHub Pages sirve
+  tal cual. `index.html` es solo el markup. Se importa
   `@supabase/supabase-js@2` como módulo ES desde `https://esm.sh`.
 - **Backend / datos:** [Supabase](https://supabase.com).
   - Proyecto: `hiofkvotqppahhzoaybr` (`https://hiofkvotqppahhzoaybr.supabase.co`).
@@ -124,17 +125,51 @@ estado en la cabecera ("guardando…" / "✓ sincronizado HH:MM" / "⚠︎ error
 
 ```
 .
-├── index.html   # toda la app (markup + estilos + lógica)
-├── README.md    # descripción breve
-└── CLAUDE.md    # este archivo
+├── index.html          # solo markup: el gate, la app y el diálogo de tarjeta
+├── css/styles.css      # todos los estilos (variables CSS, claro/oscuro)
+├── js/
+│   ├── main.js         # entrada: engancha los módulos y arranca con la sesión
+│   ├── config.js       # cliente de Supabase, COLS, TABS, STATUSES, paleta
+│   ├── util.js         # helpers puros: esc, uid, fechas, dueClass, tagColor
+│   ├── state.js        # estado en memoria (app, S, lastWrite) y seed()
+│   ├── sync.js         # loadBoard / upsert / save / Realtime
+│   ├── auth.js         # login, alta y cierre de sesión
+│   ├── nav.js          # cambio de tablero y de pestaña (solo alterna clases)
+│   ├── bus.js          # pub/sub mínimo, para romper ciclos de importación
+│   ├── render.js       # renderAll(): único punto que repinta todo
+│   └── ui/
+│       ├── board.js        # pipeline (Kanban) y la cara de la tarjeta
+│       ├── card-dialog.js  # ventana de edición: etiquetas, checklist, rems
+│       ├── tasks.js        # pestaña Pendientes y su filtro por tema
+│       ├── rems.js         # pestaña Recordatorios
+│       └── frentes.js      # pestaña Frentes
+├── README.md
+└── CLAUDE.md           # este archivo
 ```
+
+**Regla de dependencias: el grafo no tiene ciclos.** Las capas van de abajo
+hacia arriba —`config`/`util`/`state`/`bus` → `sync` → `nav` → `ui/*` →
+`render` → `main`— y ningún módulo importa a uno de su misma capa o superior.
+Las dos aristas que sí volverían hacia atrás (guardar una tarjeta y tener que
+repintar; borrar una y tener que repintar) se resuelven con el bus: el módulo
+emite `datos-cambiaron` y `main.js` es quien llama a `renderAll()`. Si en algún
+momento un módulo de `ui/` necesita importar a `render.js`, es señal de que hay
+que mandar un evento, no una importación.
 
 ## Convenciones de trabajo
 
-- **No hay build ni dependencias locales:** se edita `index.html` directamente.
-- Para probar en local basta abrir `index.html` en el navegador (o servir la
-  carpeta con cualquier servidor estático); la auth y los datos van contra el
-  Supabase real.
+- **No hay build ni dependencias locales:** se editan los archivos directamente
+  y GitHub Pages los sirve tal cual.
+- ⚠️ **Ya no sirve abrir `index.html` con doble clic.** Los módulos ES se piden
+  por HTTP y el navegador los bloquea por CORS desde `file://`. Hay que servir
+  la carpeta:
+
+  ```
+  python3 -m http.server 4173
+  ```
+
+  y entrar a `http://localhost:4173`. La auth y los datos van contra el
+  Supabase real, así que lo que se toque en local **se guarda de verdad**.
 - Estilos con variables CSS y soporte de **tema claro/oscuro** vía
   `prefers-color-scheme`.
 - IDs cortos con `uid()`; escape de HTML con `esc()` al pintar contenido del
@@ -379,3 +414,8 @@ respaldo, son arqueología.
 8. Documenta `boards_backup`, el incidente del 1-ago y su remediación; corrige
    el catálogo de rutinas (3 activas, encadenadas); marca como resueltos los
    huecos del vault y del solapamiento.
+9. Modulariza la app: `index.html` queda solo con el markup, los estilos pasan a
+   `css/styles.css` y la lógica a módulos ES en `js/`. Sin cambio de
+   comportamiento y sin build, como preparación para las ventanas nuevas
+   (dashboards, capacitación, entretenimiento) que habrían llevado el archivo
+   único a ~100 KB.
