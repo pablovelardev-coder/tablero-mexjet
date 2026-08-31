@@ -226,6 +226,105 @@ function pintarFrentesDinero(abiertos) {
   });
 }
 
+
+/* ==================== Bloque 3: decisiones que desbloquean ====================
+   No es "lo bloqueado": es lo que Pablo puede resolver de un tirón y que libera
+   trabajo detenido. El valor está en el cociente — poco esfuerzo, mucho suelto. */
+
+// La tarea pide una decisión, no una ejecución.
+const ES_DECISION = /^\s*(definir|decidir|elegir|fijar|autorizar|aprobar|confirmar|resolver)\b|\bdefinir si\b|\bdecidir\b|\bfalta (el )?dato\b|\bpor confirmar\b|\bdesbloquea\b|\bqueda por definir\b/i;
+
+export function esDecision(t) {
+  return t.status === "Bloqueada" || ES_DECISION.test(t.text || "");
+}
+
+export function decisionesQueDesbloquean(abiertos) {
+  return abiertos
+    .filter(esDecision)
+    .map(t => ({ t, libera: detiene(t) }))
+    // Primero lo que más libera. Pero "liberar" solo cuenta pendientes del mismo
+    // frente, y hay decisiones cuyo costo es externo — "definir quién monitorea
+    // info@ale.mx" no destraba ninguna tarea y sin embargo se está perdiendo
+    // demanda entrante. Por eso a igualdad de liberación manda el árbol (bono,
+    // dinero), y solo al final la decisión más corta de explicar.
+    .sort((a, b) => (b.libera - a.libera) || comparaPrioridad(a.t, b.t)
+                 || ((a.t.text || "").length - (b.t.text || "").length));
+}
+
+function pintarDecisiones(abiertos) {
+  const c = $("dashDecisiones");
+  if (!c) return;
+  const lista = decisionesQueDesbloquean(abiertos);
+  $("dashDecisionesN").textContent = lista.length;
+  if (!lista.length) { c.innerHTML = `<p class="sub">Ninguna decisión pendiente detectada.</p>`; return }
+
+  c.innerHTML = "";
+  lista.slice(0, 8).forEach(({ t, libera }) => {
+    const el = document.createElement("div");
+    el.className = "deci" + (libera >= 5 ? " gorda" : "");
+    el.innerHTML = `
+      <div class="deci-cab">
+        ${libera ? `<span class="libera">libera ${libera}</span>` : `<span class="libera cero">no libera nada</span>`}
+        ${t.status === "Bloqueada" ? `<span class="razon">bloqueada</span>` : ""}
+        ${impactaBono(t) ? `<span class="razon">🎯 bono</span>` : ""}
+      </div>
+      <div class="deuda-tx">${esc(clip(t.text || "", 180))}</div>
+      ${t.frente ? `<div class="deuda-pie"><span class="deuda-frente">${esc(t.frente)}</span>
+        ${libera ? `<button class="deuda-detiene" type="button">ver lo que libera</button>` : ""}</div>` : ""}`;
+    const b = el.querySelector(".deuda-detiene");
+    if (b) b.onclick = () => { setTaskFilter({ label: t.frente, frente: t.frente }); showTab("pendientes"); renderTasks() };
+    c.appendChild(el);
+  });
+}
+
+/* ==================== Bloque 4: estatus operativo del tablero ==================
+   Salud del tablero como sistema, no del negocio. Responde "¿me puedo fiar de
+   lo que estoy viendo?". Cubre el hueco que el CLAUDE.md llama "sin rutina de
+   salud": nadie revisa vencidos, huérfanos ni duplicados.                     */
+
+const norm = s => (s || "").toLowerCase().replace(/\s+/g, " ").trim();
+
+export function saludDelTablero(abiertos, cards) {
+  // Duplicados: mismo texto en dos pendientes distintos. Ya apareció uno real
+  // (la tarea de Isabel estaba en dos frentes) y nadie lo habría notado.
+  const porTexto = {};
+  abiertos.forEach(t => { const k = norm(t.text); if (k) (porTexto[k] ||= []).push(t) });
+  const duplicados = Object.values(porTexto).filter(g => g.length > 1);
+
+  return [
+    { id: "sinFecha",    n: abiertos.filter(t => !t.due).length,
+      etiqueta: "sin fecha", ayuda: "No se pueden priorizar por vencimiento ni salen en el semáforo." },
+    { id: "sinFrente",   n: abiertos.filter(t => !t.frente).length,
+      etiqueta: "sin frente", ayuda: "No se ligan a ninguna tarjeta: son invisibles en el pipeline." },
+    { id: "sinDeudor",   n: abiertos.filter(t => !t.deudor && !t.acreedor).length,
+      etiqueta: "sin contraparte", ayuda: "Su montón está inferido del texto, no confirmado." },
+    { id: "duplicados",  n: duplicados.length,
+      etiqueta: "duplicados", ayuda: "El mismo pendiente escrito dos veces; infla lo que cada frente parece detener.",
+      detalle: duplicados.map(g => `${g.length}× ${clip(g[0].text || "", 70)}`) },
+    { id: "sinSiguiente", n: cards.filter(c => !(c.siguiente && c.siguiente.texto)).length,
+      etiqueta: "tarjetas sin siguiente acción", ayuda: "Nadie sabe qué sigue en ellas." },
+    { id: "estancadas",  n: cards.filter(c => { const d = diasDesde((c.ultima || {}).fecha); return d !== null && d >= 30 }).length,
+      etiqueta: "tarjetas estancadas +30d", ayuda: "Sin movimiento registrado en más de un mes." }
+  ];
+}
+
+function pintarSalud(abiertos) {
+  const c = $("dashSalud");
+  if (!c) return;
+  const cards = (D() || {}).cards || [];
+  const m = saludDelTablero(abiertos, cards);
+  c.innerHTML = m.map(x => `
+    <div class="salud${x.n ? (x.id === "duplicados" || x.id === "sinFrente" ? " mal" : " ojo") : " bien"}" title="${esc(x.ayuda)}">
+      <b>${x.n}</b><span>${esc(x.etiqueta)}</span>
+    </div>`).join("");
+
+  const dup = m.find(x => x.id === "duplicados");
+  const det = $("dashSaludDetalle");
+  if (det) det.innerHTML = (dup && dup.n)
+    ? `<b>Duplicados:</b><ul>${dup.detalle.map(d => `<li>${esc(d)}</li>`).join("")}</ul>`
+    : "";
+}
+
 export function renderDashboard() {
   const wrap = $("dashWrap");
   if (!wrap) return;
@@ -241,6 +340,8 @@ export function renderDashboard() {
 
   pintarMonton("dashMeDeben", meDeben.slice(0,12), "me-deben", "Nadie te debe nada abierto.");
   pintarMonton("dashDebo", debo.slice(0,12), "debo", "No debes nada abierto.");
+  pintarDecisiones(abiertos);
+  pintarSalud(abiertos);
 
   // Sin contraparte asignada: el montón que se vacía solo conforme Pablo usa el tablero.
   const sinAsignar = abiertos.filter(t => !t.deudor && !t.acreedor).length;

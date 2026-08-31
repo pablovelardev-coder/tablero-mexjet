@@ -415,6 +415,53 @@ quedado un inventario por columna y el detalle de las tarjetas.
 (c) Los transcripts locales salvaron el día — pero no son una estrategia de
 respaldo, son arqueología.
 
+### 2026-08-31 — Se repitió, y esta vez lo causó una sesión de Claude
+
+**Qué pasó.** Probando el arreglo de `auth.js` **contra la app real**, se inyectó
+estado vacío en los módulos y se llamó `abrirSesion()`, que dispara `start()`.
+Con el estado vacío en memoria, `loadBoard` → `upsert` sobrescribió los tres
+tableros. Los `edge_logs` lo muestran: seis `POST /rest/v1/boards` con
+`on_conflict=user_id,kind` desde el navegador.
+
+**Cómo se recuperó.** Desde `boards_backup`, que esta vez sí existía: el
+respaldo diario más dos snapshots manuales tomados minutos antes. Se verificó
+por id que ningún elemento de ningún respaldo de los últimos 7 días faltara.
+
+**Qué se hizo para que no se repita.**
+
+1. 🔒 **Trigger `boards_rechaza_vaciado_trg`** — la base de datos rechaza
+   cualquier `UPDATE` que deje un tablero con cero `cards`, `tasks` y `rems`
+   si antes tenía contenido. No depende de la app: aplica a cualquier cliente.
+   Es la defensa que faltaba desde el 1-ago.
+2. La regla de pruebas de abajo.
+
+**Lección.** El respaldo salvó los datos, pero el respaldo es la última línea,
+no la primera. Lo que faltaba era que la base **se negara** a quedarse vacía.
+
+## ⛔ Regla de pruebas: nunca contra producción
+
+**No hay base de datos de pruebas.** `index.html` servido en `localhost` y el
+desplegado en GitHub Pages apuntan al MISMO Supabase real. Cualquier prueba que
+ejecute `start()`, `abrirSesion()` o `save()` **escribe en los tableros de
+verdad**. Así se borraron el 31-ago.
+
+Antes de tocar nada en una sesión de navegador, dejar el cliente inerte:
+
+```js
+const cfg = await import('./js/config.js');
+cfg.sb.from = () => { throw new Error('BLOQUEADO: prueba escribiendo a produccion') };
+cfg.sb.channel = cfg.sb.from;
+```
+
+y **comprobar que quedó puesto** antes de seguir. Con eso se pueden probar los
+módulos de render con datos de prueba sin riesgo.
+
+> Ojo con la caché de módulos ES: tras editar un archivo, el navegador puede
+> seguir sirviendo el anterior. Verificar con
+> `(await import('./js/x.js?cb='+Date.now())).f.toString()` que el código
+> cargado es el nuevo. Si se hace cache-bust de dos módulos que comparten
+> estado, se crean **instancias distintas** — bustear solo el que cambió.
+
 ## Historial
 
 1. `cf982ae` — Tablero MexJet: Ventas, Dirección y Personal (versión inicial).
