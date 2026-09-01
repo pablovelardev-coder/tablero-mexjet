@@ -315,6 +315,20 @@ entretenimiento 1 por tema. Se subió inteligencia y se bajó entretenimiento el
 1-sep, porque la primera corrida trajo 10 de entretenimiento y 1 de
 inteligencia — al revés de lo que sirve.
 
+**Ventana de tiempo, distinta por sección** — el ajuste que de verdad destrabó
+inteligencia:
+
+| Sección | Ventana | Por qué |
+|---|---|---|
+| `inteligencia` | **30 días** | Un anuncio de planta o un cambio de director general sigue siendo un lead vivo semanas después. Con 7 días la sección salía casi vacía **aunque la búsqueda sí encontrara material bueno** — se descartaban NIFCO en Apodaca, KIA en Pesquería, el nuevo DG de Metalsa y el relevo de CEO en Nemak. |
+| `capacitacion` | 14 días (30 para papers) | El análisis firmado no caduca en una semana. |
+| `entretenimiento` | 7 días | Aquí sí caduca rápido. |
+
+⚠️ **Dominios bloqueados por el proxy del entorno cloud:** `clusterindustrial.com.mx`,
+`mexicoindustry.com` y `nl.gob.mx` no se pueden abrir con WebFetch, aunque sí
+aparecen por WebSearch. La rutina tiene instrucción de no perder tiempo
+intentándolo y de decir en el resumen que no pudo leer el cuerpo.
+
 ## Rutinas automáticas
 
 Arquitectura **híbrida**: rutinas en la nube (corren solas, no dependen de que
