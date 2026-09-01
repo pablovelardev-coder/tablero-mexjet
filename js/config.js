@@ -40,6 +40,11 @@ export const SECCIONES = {
     rotulo: "Capacitación",
     temas: [
       { id:"inteligencia", rotulo:"Inteligencia comercial", seccion:"inteligencia", destacado:true },
+      // Aprobados por Pablo el 31-ago. El de aviación es su propio negocio y no
+      // lo había mencionado; el fiscal/inmobiliario costó caro en Bética 15 y
+      // sigue abierto en Guadalupe.
+      { id:"aviacion",     rotulo:"Aviación y competencia", seccion:"capacitacion" },
+      { id:"fiscal",       rotulo:"Fiscal e inmobiliario",  seccion:"capacitacion" },
       { id:"tecnologia",   rotulo:"Tecnología",             seccion:"capacitacion" },
       { id:"ia",           rotulo:"IA",                     seccion:"capacitacion" },
       { id:"finanzas",     rotulo:"Finanzas",               seccion:"capacitacion" },
