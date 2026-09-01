@@ -287,6 +287,34 @@ Para que el contexto no dependa de recordar un chat, existe la tabla
 - Así, aunque el texto crudo de un chat no viaje entre dispositivos, **el
   resumen sí**: vive en Supabase y lo lee cualquier sesión.
 
+## Curación del feed
+
+Rutina cloud **`Curación del feed`** (`trig_01DAsAuygxaKnRWN4cDw5YCv`), lunes a
+viernes 7:30 am, más *pull* a mano desde https://claude.ai/code/routines.
+Escribe en `feed`, nunca en `boards`.
+
+**Prioridad de fuente**, en este orden — es lo que Pablo pidió explícitamente:
+
+1. **Prensa validada**, mexicana y de **Estados Unidos**. Tiene suscripción a
+   El Norte / Reforma. Para nearshoring: Cluster Industrial, Mexico Industry,
+   Site Selection, Area Development. Internacional: WSJ, Bloomberg, Reuters, FT.
+2. **Fuente primaria**: boletines de la Secretaría de Economía de NL, Banxico,
+   INEGI, comunicados de la propia empresa, filings a la SEC.
+3. **Académico y de investigación**: NBER, HBR, MIT Sloan, Nature, Lancet, NEJM,
+   JAMA, McKinsey / BCG / Bain.
+4. **Blogs y Substack de autores reconocidos.** El criterio es la persona, no la
+   plataforma: trayectoria verificable y firma propia. En `fuente_nombre` va
+   `Nombre Apellido (Substack)`.
+
+⚠️ **Muro de pago:** la rutina no puede leer el cuerpo de El Norte, Reforma, WSJ
+ni FT. Guarda la liga para que Pablo la abra con su suscripción, pero tiene
+instrucción de **no inventar detalle que no pudo leer**.
+
+**Volumen:** inteligencia comercial hasta 6 · capacitación 2 por tema ·
+entretenimiento 1 por tema. Se subió inteligencia y se bajó entretenimiento el
+1-sep, porque la primera corrida trajo 10 de entretenimiento y 1 de
+inteligencia — al revés de lo que sirve.
+
 ## Rutinas automáticas
 
 Arquitectura **híbrida**: rutinas en la nube (corren solas, no dependen de que
