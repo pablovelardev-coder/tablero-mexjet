@@ -16,7 +16,7 @@ export const COLS = {
 
 // Orden de las pestañas por tablero
 export const TABS = {
-  ventas: ["pipeline","pendientes","recordatorios","frentes"],
+  ventas: ["hoy","pipeline","pendientes","recordatorios","frentes"],
   direccion: ["hoy","pendientes","recordatorios","frentes","pipeline"],
   personal: ["pipeline","pendientes","recordatorios"]
 };

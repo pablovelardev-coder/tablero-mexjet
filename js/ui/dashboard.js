@@ -338,8 +338,15 @@ export function renderDashboard() {
   $("dashMeDebenN").textContent = meDeben.length;
   $("dashDeboN").textContent = debo.length;
 
-  pintarMonton("dashMeDeben", meDeben.slice(0,12), "me-deben", "Nadie te debe nada abierto.");
-  pintarMonton("dashDebo", debo.slice(0,12), "debo", "No debes nada abierto.");
+  // Un tablero sin ningún pendiente no es lo mismo que uno al corriente. Decirlo,
+  // porque si no los dos montones vacíos se leen como "no debes nada" y es mentira.
+  const sinPendientes = !abiertos.length;
+  const vacioMeDeben = sinPendientes
+    ? "Este tablero todavía no tiene pendientes. Los montones se llenan con la pestaña Pendientes."
+    : "Nadie te debe nada abierto.";
+  const vacioDebo = sinPendientes ? "" : "No debes nada abierto.";
+  pintarMonton("dashMeDeben", meDeben.slice(0,12), "me-deben", vacioMeDeben);
+  pintarMonton("dashDebo", debo.slice(0,12), "debo", vacioDebo);
   pintarDecisiones(abiertos);
   pintarSalud(abiertos);
 
