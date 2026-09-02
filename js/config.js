@@ -59,7 +59,11 @@ export const SECCIONES = {
       { id:"cowboys",     rotulo:"Cowboys",                    seccion:"entretenimiento" },
       { id:"f1",          rotulo:"F1",                         seccion:"entretenimiento" },
       { id:"yoga",        rotulo:"Yoga",                       seccion:"entretenimiento" },
-      { id:"salud",       rotulo:"Estudios de salud",          seccion:"entretenimiento" }
+      { id:"salud",       rotulo:"Estudios de salud",          seccion:"entretenimiento" },
+      // Agregado 2-sep-2026: la rutina de curación insertó tema="autos" antes de que
+      // existiera esta pestaña, y la pieza quedó invisible. Se abre la pestaña en vez de
+      // descartar el contenido — Pablo la pidió explícitamente al ampliar la curación.
+      { id:"autos",       rotulo:"Autos",                       seccion:"entretenimiento" }
     ]
   }
 };
