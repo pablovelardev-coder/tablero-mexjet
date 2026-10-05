@@ -10,7 +10,17 @@ function rotuloTab(v) {
   return TAB_LABELS[v];
 }
 
+// Título grande con el nombre del tablero y la fecha, como en las apps de Apple.
+function pintarTitulo() {
+  const b = document.querySelector(`.switch button[data-b="${app.cur}"]`);
+  const h = $("lgTitle"), f = $("lgFecha");
+  if (h && b) h.textContent = b.textContent;
+  if (f) { const s = new Date().toLocaleDateString("es-MX", { weekday:"long", day:"numeric", month:"long" }); f.textContent = s.charAt(0).toUpperCase() + s.slice(1) }
+  document.body.dataset.board = app.cur;
+}
+
 export function buildTabs() {
+  pintarTitulo();
   const t = $("tabs");
   t.innerHTML = "";
 

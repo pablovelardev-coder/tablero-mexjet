@@ -2,20 +2,27 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Tablero">
 <title>Tableros · Pablo Velarde</title>
 <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
 <div id="gate">
   <div class="gatebox">
-    <h1>✈️ Tablero MexJet</h1>
+    <h1><span class="ico">✈︎</span>Tablero MexJet</h1>
     <p id="gateSub">Ingresa con tu correo y una contraseña.</p>
     <div id="step1">
-      <input id="email" type="email" placeholder="tu correo" autocomplete="email">
-      <input id="pass" type="password" placeholder="contraseña (mín. 6)" autocomplete="current-password" style="margin-top:8px">
-      <button class="primary" id="btnSend" style="margin-top:10px">Entrar</button>
-      <p style="font-size:11px;color:var(--muted);margin:10px 0 0">La primera vez crea tu cuenta automáticamente con la contraseña que escribas.</p>
+      <div class="grupo">
+        <input id="email" type="email" placeholder="Correo" autocomplete="email">
+        <input id="pass" type="password" placeholder="Contraseña (mín. 6)" autocomplete="current-password">
+      </div>
+      <button class="primary" id="btnSend">Entrar</button>
+      <p class="nota">La primera vez crea tu cuenta automáticamente con la contraseña que escribas.</p>
     </div>
     <div class="msg" id="gateMsg"></div>
   </div>
@@ -23,13 +30,12 @@
 
 <div id="app" class="hidden">
   <header>
-    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-      <h1 class="title">✈️ Tablero MexJet</h1>
-      <div class="switch"><button data-b="ventas" class="on">Ventas</button><button data-b="direccion">Dirección</button><button data-b="personal">Personal</button><button data-b="capacitacion">Capacitación</button><button data-b="entretenimiento">Entretenimiento</button></div>
-    </div>
+    <div class="brand"><span class="ico">✈︎</span><h1 class="title">Tablero MexJet</h1></div>
+    <nav class="switch" aria-label="Tablero"><button data-b="ventas" class="on">Ventas</button><button data-b="direccion">Dirección</button><button data-b="personal">Personal</button><button data-b="capacitacion" data-short="Aprender">Capacitación</button><button data-b="entretenimiento" data-short="Ocio">Entretenimiento</button></nav>
     <div class="right"><span class="sync" id="sync">·</span><button class="mini" id="btnOut">Salir</button></div>
   </header>
-  <div class="tabs" id="tabs"></div>
+  <div class="largetitle"><h2 id="lgTitle">Ventas</h2><span class="fecha" id="lgFecha"></span></div>
+  <div class="tabs" id="tabs" role="tablist"></div>
   <main>
     <section class="view" data-v="feed">
       <div id="feedWrap">

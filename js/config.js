@@ -25,7 +25,8 @@ export const STATUSES = ["Por hacer","En curso","Bloqueada","Hecha"];
 
 export const TAB_LABELS = { hoy:"Hoy", pipeline:"Pipeline", pendientes:"Pendientes", recordatorios:"Recordatorios", frentes:"Frentes" };
 
-export const TAGPAL = ["#0b5fff","#16a34a","#f97316","#8b5cf6","#dc2626","#0891b2","#b45309","#db2777","#4d7c0f","#475569"];
+// Colores del sistema de Apple: azul, verde, naranja, morado, rojo, cian, café, rosa, índigo, gris.
+export const TAGPAL = ["#007aff","#34c759","#ff9500","#af52de","#ff3b30","#30b0c7","#a2845e","#ff2d55","#5856d6","#8e8e93"];
 
 /* ---------- Secciones transversales (Capacitación y Entretenimiento) ----------
    No son tableros: no tienen columnas ni pendientes. Leen de la tabla `feed`,

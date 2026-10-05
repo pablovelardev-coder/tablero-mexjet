@@ -14,7 +14,7 @@ let DTAGS = [], DCK = [], DREM = [];
 /* ---- etiquetas ---- */
 function drawTags() {
   $("cTagWrap").innerHTML = DTAGS.length
-    ? DTAGS.map((l,i) => `<span class="tag" style="background:${tagColor(l)}">${esc(l)}<button type="button" data-i="${i}">×</button></span>`).join("")
+    ? DTAGS.map((l,i) => `<span class="tag" style="--tc:${tagColor(l)}">${esc(l)}<button type="button" data-i="${i}">×</button></span>`).join("")
     : `<span style="color:var(--muted);font-size:12px">Sin etiquetas</span>`;
   $("cTagWrap").querySelectorAll("button").forEach(b => b.onclick = () => { DTAGS.splice(+b.dataset.i,1); drawTags() });
 }

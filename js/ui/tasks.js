@@ -14,15 +14,14 @@ function pintarBarraFiltro() {
   if (!bar) {
     bar = document.createElement("div");
     bar.id = "taskFilterBar";
-    bar.style.margin = "0 0 8px";
     const tbl = $("tblTasks");
     tbl.parentNode.insertBefore(bar, tbl);
   }
   bar.innerHTML = TASKFILTER
-    ? `<span style="display:inline-block;background:#eef2ff;border:1px solid #c7d2fe;border-radius:6px;padding:4px 9px;font-size:12px">
+    ? `<span class="filtro">
          Tema: <b>${esc(TASKFILTER.label || "")}</b>
-         <button id="clrFilter" style="margin-left:8px;cursor:pointer;border:1px solid #ccc;border-radius:5px;background:#fff;font-size:11px;padding:1px 6px">✕ ver todos</button>
-         <button id="backBoard" style="margin-left:4px;cursor:pointer;border:1px solid #ccc;border-radius:5px;background:#fff;font-size:11px;padding:1px 6px">↩ ver en el tablero</button>
+         <button id="clrFilter">Ver todos</button>
+         <button id="backBoard">Ver en el tablero</button>
        </span>`
     : "";
   const clr = $("clrFilter");

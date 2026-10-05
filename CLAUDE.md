@@ -191,6 +191,13 @@ que mandar un evento, no una importación.
   Supabase real, así que lo que se toque en local **se guarda de verdad**.
 - Estilos con variables CSS y soporte de **tema claro/oscuro** vía
   `prefers-color-scheme`.
+- **Lenguaje visual de Apple (iOS 26 / macOS 26)** desde oct-2026: colores y
+  fondos agrupados del sistema, barras de vidrio (`backdrop-filter`), controles
+  en cápsula, título grande por tablero. En iPhone (≤720 px) el selector de
+  tablero baja a una barra de pestañas flotante. El vidrio del header va en
+  `header::before` a propósito: si el header llevara `backdrop-filter`, atraparía
+  a la barra fija del iPhone. Colores de etiqueta: se pasan como `--tc`, no como
+  `background`.
 - IDs cortos con `uid()`; escape de HTML con `esc()` al pintar contenido del
   usuario.
 - **No** meter datos de negocio ni secretos en el repo: solo la anon key
@@ -569,3 +576,5 @@ módulos de render con datos de prueba sin riesgo.
    comportamiento y sin build, como preparación para las ventanas nuevas
    (dashboards, capacitación, entretenimiento) que habrían llevado el archivo
    único a ~100 KB.
+10. Rediseño con el lenguaje visual de Apple (iOS 26 / macOS 26): solo
+    presentación, sin cambio en la lógica de guardado.

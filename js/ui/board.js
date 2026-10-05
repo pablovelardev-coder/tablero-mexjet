@@ -56,17 +56,17 @@ function pintarTarjeta(c, color) {
   const pend = pendientesDe(c);
   const li = pend.slice(0,4).map(t => {
     const cls = dueClass(t.due, t.status);
-    const col = cls === "overdue" ? "var(--lost)" : cls === "soon" ? "var(--warn)" : "var(--muted,#888)";
+    const col = cls === "overdue" ? "var(--lost)" : cls === "soon" ? "var(--warn)" : "var(--muted)";
     const f = t.due ? `<span style="color:${col};font-weight:600">${t.due.slice(5)}</span> ` : "";
-    return `<li style="margin:2px 0">${f}${esc(clip(t.text,68))}</li>`;
+    return `<li>${f}${esc(clip(t.text,68))}</li>`;
   }).join("");
 
-  const tags = (c.labels || []).map(l => `<span class="tag" style="background:${tagColor(l)}">${esc(l)}</span>`).join("");
+  const tags = (c.labels || []).map(l => `<span class="tag" style="--tc:${tagColor(l)}">${esc(l)}</span>`).join("");
 
   const ck = c.checklist || [], ckDone = ck.filter(i => i.done).length;
   const ckHtml = ck.length
     ? `<div class="prog"><i style="width:${Math.round(ckDone/ck.length*100)}%"></i></div>
-       <div class="meta" style="font-size:11px">☑️ ${ckDone} de ${ck.length}${ckDone === ck.length ? " · completo" : ""}</div>`
+       <div class="meta" style="font-size:11.5px">${ckDone} de ${ck.length}${ckDone === ck.length ? " · completo" : ""}</div>`
     : "";
 
   const cr = (D().rems || []).filter(r => r.cardId === c.id).sort((a,b) => (a.date||"").localeCompare(b.date||""));
@@ -82,10 +82,10 @@ function pintarTarjeta(c, color) {
     + actsHtml(c)
     + ckHtml
     + ((remHtml || noteHtml) ? `<div style="margin-top:5px">${remHtml}${noteHtml}</div>` : "")
-    + (pend.length ? `<div style="margin-top:6px;border-top:1px dashed #d9d9d9;padding-top:5px">
-        <ul style="margin:0;padding-left:14px;font-size:11px;line-height:1.35">${li}</ul>
-        ${pend.length > 4 ? `<div style="font-size:11px;opacity:.65;padding-left:14px">+${pend.length-4} más…</div>` : ""}
-        <button class="seeall" style="margin-top:5px;font-size:11px;cursor:pointer;border:1px solid #ccc;border-radius:5px;background:#fafafa;padding:2px 7px">📋 Ver los ${pend.length} pendientes</button>
+    + (pend.length ? `<div class="pend">
+        <ul>${li}</ul>
+        ${pend.length > 4 ? `<div class="mas">+${pend.length-4} más…</div>` : ""}
+        <button class="seeall mini">${pend.length === 1 ? "Ver el pendiente" : `Ver los ${pend.length} pendientes`}</button>
       </div>` : "");
 
   card.onclick = () => openCard(c.id);
@@ -120,7 +120,7 @@ export function renderBoard() {
 
     const add = document.createElement("button");
     add.className = "addcard";
-    add.textContent = "+ tarjeta";
+    add.textContent = "+ Nueva tarjeta";
     add.onclick = () => openCard(null, cid);
     el.appendChild(add);
 
