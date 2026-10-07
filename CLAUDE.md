@@ -179,6 +179,15 @@ que mandar un evento, no una importación.
 
 - **No hay build ni dependencias locales:** se editan los archivos directamente
   y GitHub Pages los sirve tal cual.
+- 🔀 **Cambios de código, por pull request** *(regla de Pablo, 7-oct-2026)*. Todo
+  cambio a `index.html`, `css/` o `js/` va en una rama con PR, y **se integra a
+  `main` solo cuando Pablo lo revisó y dio el visto bueno**. Vale igual desde la
+  Mac que desde la nube. Por qué: Pages publica `main` al instante y sin pruebas,
+  así que lo que llega ahí ya es el tablero que Pablo abre en el celular; y el
+  repo es público, así que el PR es el momento de ver que no se cuele un dato de
+  negocio. Los cambios que solo tocan documentación (`CLAUDE.md`, `README.md`)
+  pueden integrarse sin esperar revisión. En el vault (`segundo-cerebro`) **no**
+  aplica: ahí la Mac sube directo a `main`.
 - ⚠️ **Ya no sirve abrir `index.html` con doble clic.** Los módulos ES se piden
   por HTTP y el navegador los bloquea por CORS desde `file://`. Hay que servir
   la carpeta:
@@ -578,3 +587,5 @@ módulos de render con datos de prueba sin riesgo.
    único a ~100 KB.
 10. Rediseño con el lenguaje visual de Apple (iOS 26 / macOS 26): solo
     presentación, sin cambio en la lógica de guardado.
+11. Regla de trabajo: los cambios de código (`index.html`, `css/`, `js/`) van por
+    pull request y se integran solo con el visto bueno de Pablo.
