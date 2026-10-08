@@ -1,6 +1,6 @@
 // Punto de entrada: engancha los módulos y arranca cuando hay sesión.
 import { app } from "./state.js";
-import { loadBoard, subscribeBoards, setSync } from "./sync.js";
+import { loadBoard, subscribeBoards, setSync, vigilarRegreso } from "./sync.js";
 import { buildTabs, initBoardSwitch, onTemaChange } from "./nav.js";
 import { esSeccion } from "./config.js";
 import { cargarFeed, renderFeed } from "./ui/feed.js";
@@ -17,6 +17,7 @@ async function start() {
   $("app").classList.remove("hidden");
   await Promise.all([loadBoard("ventas"), loadBoard("direccion"), loadBoard("personal")]);
   subscribeBoards(renderAll);
+  vigilarRegreso();
   buildTabs();
   renderAll();
   setSync("ok");
