@@ -552,6 +552,13 @@ por id que ningún elemento de ningún respaldo de los últimos 7 días faltara.
    transacción (la app no puede usarla; solo el conector de administrador).
    Migración y pruebas en `supabase/` — las pruebas corren contra un Postgres
    local, **nunca** contra producción.
+   *Aplicado el 8-oct-2026 por `execute_sql`, no por `apply_migration`:* la
+   herramienta `apply_migration` se colgó dos veces sin tocar la base (sin
+   bloqueos, sin nada a medias), así que **no figura en
+   `supabase_migrations.schema_migrations`** — la fuente de verdad es el archivo
+   del repo. Verificado al aplicar: la huella `md5` del cuerpo de cada función en
+   la base coincide con el archivo, y los tres tableros quedaron idénticos al
+   respaldo tomado antes (ids 172–174).
 
 > Las medidas son de capas distintas a propósito: la app puede fallar y el
 > dato sobrevive; la base puede no tener el trigger y el cliente ya no lo intenta.
