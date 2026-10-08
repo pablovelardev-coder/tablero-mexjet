@@ -192,6 +192,13 @@ select pg_temp.caso('Pestaña vieja: reescribe tasks con una copia que no tiene 
   where kind='direccion'
 $q$, false);
 
+select pg_temp.caso('Pestaña vieja que además trae un pendiente sin id: el sin id no "salva" a nadie', $q$
+  update boards set data = jsonb_set(data, '{tasks}', (select jsonb_agg(t)
+    from jsonb_array_elements(data->'tasks') t where t->>'id' in ('t1','t2','t3','t4','t5'))
+    || '[{"text":"otro sin id"}]'::jsonb)
+  where kind='direccion'
+$q$, false);
+
 select pg_temp.caso('Mezcla: tarjeta c1 (con sus recordatorios) + 3 pendientes = 4', $q$
   update boards set data = data
     || jsonb_build_object('cards', (select jsonb_agg(c) from jsonb_array_elements(data->'cards') c
