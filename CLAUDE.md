@@ -101,6 +101,10 @@ Tabla **`boards_backup`** — snapshots de `boards`:
 - La escribe la rutina cloud *Respaldo de tableros*, cada día hábil a las 07:10.
 - Restaurar:
   `update boards set data = (select data from boards_backup where kind='X' and vacio=false order by taken_at desc limit 1) where kind='X';`
+  Si el tablero tiene elementos **más nuevos** que el respaldo, restaurar los
+  pierde y `boards_rechaza_perdida_parcial_trg` lo rechaza. Es a propósito: hay
+  que decidirlo. Si es lo que se quiere, en la misma transacción:
+  `begin; set local boards.permite_perdida = 'on'; update …; commit;`
 
 ### Forma del JSON `data`
 
@@ -535,8 +539,25 @@ por id que ningún elemento de ningún respaldo de los últimos 7 días faltara.
    memoria, antes de salir a la red. Complementa al trigger: la base es la última
    línea, ésta es la primera.
 
-> Las cuatro medidas son de capas distintas a propósito: la app puede fallar y el
+5. 🔒 **Trigger `boards_rechaza_perdida_parcial_trg`** *(8-oct-2026)* — el de
+   vaciado solo atrapa que un tablero quede en **cero**; éste atrapa la pérdida
+   **parcial**: un `UPDATE` que pierda más de 3 *acciones* de un golpe (cada
+   tarjeta, pendiente o recordatorio suelto cuenta 1; los recordatorios de una
+   misma tarjeta cuentan 1 en total, y los de una tarjeta borrada no cuentan).
+   Es el daño que deja una pestaña con estado viejo que hace `upsert`, o un
+   `jsonb_set` mal escrito a mano. Con él va
+   **`boards_rechaza_borrado_fila_trg`**, que rechaza borrar la fila de un
+   tablero con contenido — hasta ahí nada lo impedía. Válvula para un borrado
+   intencional: `set local boards.permite_perdida = 'on'` en la misma
+   transacción (la app no puede usarla; solo el conector de administrador).
+   Migración y pruebas en `supabase/` — las pruebas corren contra un Postgres
+   local, **nunca** contra producción.
+
+> Las medidas son de capas distintas a propósito: la app puede fallar y el
 > dato sobrevive; la base puede no tener el trigger y el cliente ya no lo intenta.
+> Y **solo la base ve a todos los que escriben** — la app, la rutina de
+> `info@ale.mx` y Claude desde cualquier dispositivo —, por eso los candados que
+> importan van ahí y no en un cliente.
 
 **Lección.** El respaldo salvó los datos, pero el respaldo es la última línea,
 no la primera. Lo que faltaba era que la base **se negara** a quedarse vacía.
@@ -589,3 +610,5 @@ módulos de render con datos de prueba sin riesgo.
     presentación, sin cambio en la lógica de guardado.
 11. Regla de trabajo: los cambios de código (`index.html`, `css/`, `js/`) van por
     pull request y se integran solo con el visto bueno de Pablo.
+12. Primera migración versionada (`supabase/migrations/`): triggers de pérdida
+    parcial y de borrado de fila en `boards`, con su prueba en `supabase/tests/`.
