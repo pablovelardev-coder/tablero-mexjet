@@ -142,7 +142,24 @@ sus propias columnas de pipeline y su propio orden de pestañas.
 - **Frentes** — barras de avance con slider de porcentaje.
 
 **Guardado:** con debounce de 400ms (`save()` → `upsert()`); indicador de
-estado en la cabecera ("guardando…" / "✓ sincronizado HH:MM" / "⚠︎ error").
+estado en la cabecera ("guardando…" / "✓ sincronizado HH:MM" / "actualizando…" /
+"⛔ guardado rechazado" / "⚠︎ error de conexión").
+
+**Pestaña que vuelve de segundo plano** *(8-oct-2026, `vigilarRegreso` en
+`js/sync.js`)*. Un celular en la bolsa o una laptop dormida se pierden avisos de
+Realtime, y su siguiente guardado reescribiría la base con una versión vieja.
+Por eso: **al ocultarse**, la pestaña manda ya lo que el debounce tenía
+pendiente; **al volver** (tras 5 s o más fuera, al restaurarse de la caché del
+navegador, al regresar la red, o si el canal de Realtime se cayó y volvió),
+**recarga los tres tableros de la base** antes de que se pueda tocar nada.
+La recarga primero manda lo pendiente y espera a que llegue, y **nunca siembra**:
+si la base no regresa fila, se queda lo que había (a diferencia de `loadBoard`).
+
+**Guardado rechazado por la base** (código `23514`, los triggers de `boards`):
+la app ya no dice "error de conexión". Recarga ese tablero, lo repinta y avisa
+con un `alert` que el último cambio no se guardó y hay que rehacerlo. Reintentar
+no serviría: se rechazaría otra vez, igual que cada cambio siguiente en esa
+pestaña.
 
 ## Estructura del repositorio
 
@@ -166,9 +183,18 @@ estado en la cabecera ("guardando…" / "✓ sincronizado HH:MM" / "⚠︎ error
 │       ├── tasks.js        # pestaña Pendientes y su filtro por tema
 │       ├── rems.js         # pestaña Recordatorios
 │       └── frentes.js      # pestaña Frentes
+├── supabase/
+│   ├── migrations/     # cambios de esquema versionados (triggers de boards)
+│   └── tests/          # su prueba en SQL, contra un Postgres local
+├── tests/
+│   └── sync.test.mjs   # prueba de js/sync.js en Chromium, sin red
 ├── README.md
 └── CLAUDE.md           # este archivo
 ```
+
+`supabase/` y `tests/` no son parte de la app ni de su despliegue: la app sigue
+sin build ni dependencias. Son para cambiar con cuidado lo que más daño puede
+hacer.
 
 **Regla de dependencias: el grafo no tiene ciclos.** Las capas van de abajo
 hacia arriba —`config`/`util`/`state`/`bus` → `sync` → `nav` → `ui/*` →
@@ -587,6 +613,21 @@ cfg.sb.channel = cfg.sb.from;
 y **comprobar que quedó puesto** antes de seguir. Con eso se pueden probar los
 módulos de render con datos de prueba sin riesgo.
 
+**Para `js/sync.js` —el archivo de los dos borrados— hay una prueba que no
+depende de acordarse de esto:** `tests/sync.test.mjs` corre la app en Chromium
+con los archivos servidos desde disco, reemplaza la librería de Supabase por un
+cliente falso y **aborta cualquier petición de red**, que además hace fallar la
+prueba. Cubre el guardado rechazado, la recarga al volver, que la recarga nunca
+siembre un tablero vacío, y que la app **no escriba nada al arrancar**:
+
+```
+NODE_PATH="$(npm root -g)" node tests/sync.test.mjs
+```
+
+Antes de dar por buena una prueba, **sabotear el código y ver que falle**. Al
+escribir ésta, una de las 16 pasaba sin importar lo que hiciera el código (un
+`indexOf` que daba -1); solo el sabotaje lo descubrió.
+
 > Ojo con la caché de módulos ES: tras editar un archivo, el navegador puede
 > seguir sirviendo el anterior. Verificar con
 > `(await import('./js/x.js?cb='+Date.now())).f.toString()` que el código
@@ -619,3 +660,6 @@ módulos de render con datos de prueba sin riesgo.
     pull request y se integran solo con el visto bueno de Pablo.
 12. Primera migración versionada (`supabase/migrations/`): triggers de pérdida
     parcial y de borrado de fila en `boards`, con su prueba en `supabase/tests/`.
+13. La pestaña se recarga al volver de segundo plano y el guardado rechazado por
+    la base se recarga y avisa, en vez de decir "error de conexión"
+    (`js/sync.js`). Prueba en `tests/sync.test.mjs`.
