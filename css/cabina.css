@@ -1,0 +1,221 @@
+/* =============================================================================
+   Tablero MexJet — Cabina (19-oct-2026)
+   Tablero de instrumentos: oscuro a propósito, luces que distinguen lo que Pablo
+   debe (ámbar) de lo que le deben (cian), cintas por frente, cifras en mono.
+   Se carga DESPUÉS de styles.css y solo redefine tokens y apariencia: no hay
+   selector aquí que cambie comportamiento. Quitar este archivo regresa al
+   lenguaje de Apple sin tocar nada más.
+   Elegido por Pablo entre tres direcciones (Cabina · Revista · Pulso).
+   ========================================================================== */
+
+:root{
+  color-scheme: dark;
+  --bg:#0a0f14; --panel:#101820; --panel2:#0d141b; --colbg:#0c1319;
+  --ink:#d9e4ec; --muted:#7f93a4; --ink3:#3d5163;
+  --line:#1f2c38; --fill:rgba(79,214,232,.07); --fill2:rgba(79,214,232,.14); --chip:rgba(79,214,232,.07);
+  --amber:#ffb23e; --cyan:#4fd6e8; --red:#ff5d5d; --green:#5ee08a;
+  --accent:var(--amber); --accent2:#ffc56a;
+  /* Etapas: de frío (acero) a caliente, como las cintas del laboratorio */
+  --lead:#5f7d96; --calif:#3c8fc0; --prop:var(--amber); --nego:var(--cyan); --win:var(--green); --lost:var(--red); --warn:var(--amber);
+  --indigo:#7b8cff;
+  --glass:rgba(10,15,20,.84); --glass-hi:rgba(79,214,232,.08); --glass-brd:var(--line);
+  --shadow:none;
+  --shadow-float:0 12px 36px rgba(0,0,0,.6),0 0 0 1px var(--line);
+  --r-xl:16px; --r-lg:14px; --r-md:10px; --r-sm:6px;
+  --font:"Barlow",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --cond:"Barlow Condensed","Barlow",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+
+body{letter-spacing:0;background:
+  radial-gradient(900px 420px at 85% -120px,rgba(79,214,232,.07),transparent 70%),
+  radial-gradient(700px 360px at -10% 0,rgba(255,178,62,.05),transparent 70%),var(--bg);
+  background-attachment:fixed}
+::selection{background:rgba(255,178,62,.3)}
+
+/* Cifras, fechas y contadores: siempre en mono */
+.count,.sync,.atraso,.alfecha,.salud b,.fch,.pieza-fecha,.libera,.badge,.stale,.largetitle .fecha,
+.frente span,.mov-f,.cinta-cab em,.hud b{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* Rótulos: condensada, mayúsculas, espaciada */
+.monton-t,.col h3,.largetitle h2,h1.title,.dlg h3,.sec h4,th,.tab,.switch button,.dinbox summary,.dlg label,.hud span{
+  font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em}
+
+/* ---------- Controles ------------------------------------------------------- */
+button{background:transparent;color:var(--cyan);box-shadow:inset 0 0 0 1px var(--line);font-weight:600;border-radius:var(--r-sm)}
+button:hover{background:var(--fill);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cyan) 45%,var(--line))}
+button.primary{background:var(--amber);color:#0a0f14;box-shadow:0 0 18px rgba(255,178,62,.25)}
+button.primary:hover{background:#ffc56a;color:#0a0f14}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+input,select,textarea{background:#0c1319;box-shadow:inset 0 0 0 1px var(--line);border-radius:var(--r-sm)}
+input:focus,select:focus,textarea:focus{background:#0e1820;box-shadow:inset 0 0 0 1px var(--amber),0 0 0 3px rgba(255,178,62,.15)}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:var(--amber)}
+input[type=range]{box-shadow:none}
+
+/* ---------- Acceso ---------------------------------------------------------- */
+#gate{background:radial-gradient(800px 500px at 50% -10%,rgba(79,214,232,.12),transparent 70%),var(--bg)}
+.gatebox{background:var(--panel);box-shadow:var(--shadow-float);border-radius:var(--r-xl)}
+.gatebox h1{font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:28px}
+.gatebox h1 .ico,.brand .ico{background:#0c1319;color:var(--amber);box-shadow:inset 0 0 0 1px var(--line),0 0 16px rgba(255,178,62,.25)}
+.gatebox .grupo{background:#0c1319;box-shadow:inset 0 0 0 1px var(--line)}
+.gatebox .grupo input{box-shadow:none}
+
+/* ---------- Barra superior y selector -------------------------------------- */
+header::before{border-bottom:1px solid var(--line)}
+h1.title{font-size:16px;font-weight:600;color:var(--ink)}
+.sync{color:var(--green)}
+#btnOut{box-shadow:none;color:var(--muted)}
+.switch,.tabs{background:#0c1319;box-shadow:inset 0 0 0 1px var(--line);border-radius:var(--r-md)}
+.switch button,.tab{color:var(--muted);box-shadow:none;border-radius:var(--r-sm);font-size:14px;font-weight:600}
+.switch button.on,.tab.on{background:var(--panel);color:var(--amber);box-shadow:inset 0 -2px 0 var(--amber),0 0 0 1px var(--line)}
+.tab.destacado,.tab.destacado.on{color:var(--green)}
+.tab.destacado.on{box-shadow:inset 0 -2px 0 var(--green),0 0 0 1px var(--line)}
+
+.largetitle h2{font-size:40px;font-weight:700;letter-spacing:.06em;color:var(--ink)}
+.largetitle h2::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 12px 6px 0;vertical-align:middle;
+  background:var(--amber);box-shadow:0 0 12px var(--amber)}
+.largetitle .fecha{text-transform:uppercase;letter-spacing:.08em;font-size:12px}
+
+/* ---------- Paneles genéricos ---------------------------------------------- */
+.monton,.dinbox,table,.frente,.pieza{background:var(--panel);box-shadow:inset 0 0 0 1px var(--line)}
+.monton-t{font-size:18px;font-weight:600;color:var(--cyan)}
+.monton-t.destacado,#feedWrap > .monton-t.destacado{color:var(--green)}
+.sub{color:var(--muted)}
+.count{background:transparent;color:var(--amber);box-shadow:inset 0 0 0 1px var(--line);border-radius:4px}
+
+/* ---------- Pipeline -------------------------------------------------------- */
+.col{background:var(--colbg);box-shadow:inset 0 0 0 1px var(--line)}
+.col h3{font-size:14px;font-weight:600;color:var(--ink)}
+.dot{border-radius:2px}
+/* board.js pinta border-left-color con el color de la etapa: aquí se vuelve una franja */
+.card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--line);box-shadow:none}
+.card:hover{box-shadow:0 0 0 1px color-mix(in srgb,var(--cyan) 40%,transparent),0 8px 24px rgba(0,0,0,.4)}
+.col.over{background:rgba(255,178,62,.06);box-shadow:inset 0 0 0 1px var(--amber)}
+.addcard{box-shadow:none}
+.addcard:hover{color:var(--amber)}
+.act.sig .fch{color:var(--amber)}
+.stale{background:rgba(255,178,62,.12)}
+.stale.bad{background:rgba(255,93,93,.14)}
+.tag{font-family:var(--mono);font-weight:600;letter-spacing:0;border-radius:4px}
+
+/* ---------- Tablas ---------------------------------------------------------- */
+th{color:var(--cyan);font-size:13px;font-weight:600}
+td{border-bottom:1px solid var(--line)}
+tbody tr:hover{background:rgba(79,214,232,.04)}
+td input,td select{box-shadow:none}
+td button.mini{box-shadow:none}
+
+/* ---------- Hoy: HUD -------------------------------------------------------- */
+.hud{display:flex;flex-wrap:wrap;align-items:center;gap:12px 26px;padding:14px 18px;margin-bottom:16px;border-radius:var(--r-lg);
+  background:linear-gradient(180deg,#0e151c,#0a0f14);box-shadow:inset 0 0 0 1px var(--line)}
+.hud:empty{display:none}
+.hud .cell{display:grid;gap:4px;text-align:left}
+.hud button.cell{background:transparent;box-shadow:none;padding:0;cursor:pointer}
+.hud button.cell:hover span{color:var(--ink)}
+.hud span{font-size:12px;color:var(--muted);font-weight:600}
+.hud b{font-size:34px;line-height:1;font-weight:600;color:var(--ink)}
+.hud .amb{color:var(--amber)}.hud .cian{color:var(--cyan)}.hud .rojo{color:var(--red)}.hud .verde{color:var(--green)}
+.radar{width:64px;height:64px;flex:none;border-radius:50%;position:relative;overflow:hidden;
+  background:radial-gradient(circle,#0f2027 0,#0a0f14 70%);box-shadow:inset 0 0 0 1px var(--line)}
+.radar::after{content:"";position:absolute;inset:20px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--line)}
+.radar::before{content:"";position:absolute;inset:0;background:conic-gradient(from 0deg,rgba(79,214,232,.45),transparent 25%);animation:barrido 4s linear infinite}
+.radar i{position:absolute;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red)}
+@keyframes barrido{to{transform:rotate(360deg)}}
+
+/* ---------- Hoy: montones con luces ---------------------------------------- */
+.deuda,.deci,.salud{background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line)}
+.deuda{position:relative;padding-left:30px}
+.deuda::before{content:"";position:absolute;left:11px;top:14px;width:10px;height:10px;border-radius:2px;background:var(--amber);box-shadow:0 0 10px var(--amber)}
+#dashMeDeben .deuda::before{background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.deuda.tarde{box-shadow:inset 0 0 0 1px var(--line),inset 3px 0 0 var(--amber)}
+.deuda.grave{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--red) 40%,var(--line)),inset 3px 0 0 var(--red)}
+.deuda-quien{font-family:var(--cond);font-size:17px;letter-spacing:.03em}
+.inferido,.razon,.deuda-frente{background:transparent;box-shadow:inset 0 0 0 1px var(--line);border-radius:4px;font-family:var(--mono);font-size:10px}
+.deuda-in{background:#0c1319}
+.deci{box-shadow:inset 0 0 0 1px var(--line),inset 3px 0 0 var(--cyan)}
+.deci.gorda{background:linear-gradient(90deg,rgba(94,224,138,.08),var(--panel2));box-shadow:inset 0 0 0 1px var(--line),inset 3px 0 0 var(--green)}
+.libera{background:var(--green);color:#0a0f14;border-radius:4px}
+.libera.cero{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.salud b{font-weight:600}
+.salud.mal{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--red) 55%,transparent)}
+.ftab{background:var(--panel2)}
+.ftab input[type=checkbox]{background:#1a2733;box-shadow:inset 0 0 0 1px var(--line)}
+.ftab input[type=checkbox]:checked{background:var(--green)}
+
+/* ---------- Frentes: cintas ------------------------------------------------- */
+.cinta{display:grid;gap:6px;padding:12px 0;border-top:1px dashed var(--line)}
+.cinta:first-child{border-top:0;padding-top:4px}
+.cinta-cab{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.cinta-cab b{font-family:var(--cond);font-size:19px;font-weight:600;letter-spacing:.03em}
+.cinta-cab em{font-style:normal;font-size:11.5px;color:var(--muted)}
+.cinta-bar{display:flex;height:18px;border-radius:3px;overflow:hidden;background:#0c1319;box-shadow:inset 0 0 0 1px var(--line)}
+.cinta-bar i{display:flex;align-items:center;justify-content:center;min-width:14px;height:100%;border-right:1px solid #0a0f14}
+.cinta-bar i:last-child{border-right:0}
+.cinta-bar i span{font:600 10.5px/1 var(--mono);color:#0a0f14;opacity:.85}
+.cinta-pie{font-size:12px;color:var(--muted)}
+.cinta-alerta{color:var(--red);font-weight:600}
+.cinta-cierre{color:var(--green);font-weight:600}
+.cinta.alerta .cinta-cab b{color:var(--red)}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11px;color:var(--muted);margin-top:10px;font-family:var(--mono)}
+.leyenda i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+/* Bitácora */
+.mov{display:grid;grid-template-columns:62px 1fr auto;gap:10px;align-items:baseline;padding:7px 0;border-top:1px dashed var(--line);font-size:13px}
+.mov:first-child{border-top:0}
+.mov-f{color:var(--muted);font-size:11.5px}
+.mov-c{font-family:var(--mono);font-size:11px;color:var(--cyan);white-space:nowrap}
+.mov.cierre .mov-c{color:var(--green)}
+@media (max-width:720px){.mov{grid-template-columns:54px 1fr}.mov-c{grid-column:2;white-space:normal}}
+
+/* Avance manual (deslizadores), ahora secundario */
+.frente{background:var(--panel2)}
+.frente .bar{background:#0c1319;box-shadow:inset 0 0 0 1px var(--line);border-radius:3px}
+.frente .bar i{background:var(--amber);border-radius:3px}
+
+/* ---------- Radar de contenido --------------------------------------------- */
+.radar-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.radar-it{display:block;color:var(--ink);text-decoration:none;border-left:2px solid var(--cyan);padding:3px 0 3px 12px;font-size:14px;line-height:1.35}
+.radar-it:hover{border-left-color:var(--amber)}
+.radar-it small{display:block;color:var(--muted);font:600 10px/1.6 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+
+/* ---------- Contenido curado ----------------------------------------------- */
+.pieza{border-left:2px solid var(--cyan)}
+.pieza:hover{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cyan) 40%,var(--line))}
+.pieza.guardada{border-left-color:var(--amber);box-shadow:inset 0 0 0 1px var(--line)}
+.pieza h4{font-family:var(--cond);font-size:19px;font-weight:600;letter-spacing:.02em}
+.fuente{background:transparent;box-shadow:inset 0 0 0 1px var(--line);border-radius:4px;font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em}
+.pieza-pie a{color:var(--amber)}
+
+/* ---------- Ventana de tarjeta --------------------------------------------- */
+dialog{background:var(--panel);box-shadow:var(--shadow-float)}
+dialog::backdrop{background:rgba(3,6,9,.7)}
+.sec{background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line)}
+.sec input:not([type]),.sec input[type=text],.sec input[type=date],.sec textarea{background:#0c1319}
+.sec h4{color:var(--cyan)}
+.sec h4 .pill{background:transparent;box-shadow:inset 0 0 0 1px var(--line);font-family:var(--mono);text-transform:none;letter-spacing:0}
+.dlg .actions{border-top:1px solid var(--line)}
+.ck{border-bottom:1px dashed var(--line)}
+.ck input[type=checkbox]{border-radius:3px;border-color:var(--ink3)}
+.ck input[type=checkbox]:checked{background:var(--green);border-color:var(--green)}
+.ck .del,.remrow .del{box-shadow:none}
+.prog{background:#0c1319;box-shadow:inset 0 0 0 1px var(--line);border-radius:3px}
+.prog i{border-radius:3px}
+.grow-hint{background:var(--panel)}
+
+/* ---------- iPhone ----------------------------------------------------------- */
+@media (max-width:720px){
+  .largetitle h2{font-size:32px}
+  .switch{border-radius:18px;background:var(--glass);box-shadow:var(--shadow-float)}
+  .switch button{font-family:var(--font);text-transform:none;letter-spacing:0;font-size:10px}
+  .switch button.on{background:transparent;color:var(--amber);box-shadow:none}
+  .switch button.on::before{filter:drop-shadow(0 0 6px rgba(255,178,62,.6))}
+  .hud{gap:10px 18px;padding:12px 14px}
+  .hud b{font-size:28px}
+  .radar{width:52px;height:52px}
+  .radar::after{inset:16px}
+  .radar-lista{grid-template-columns:1fr}
+}
+
+@media (prefers-reduced-transparency:reduce){
+  .switch{background:var(--panel)!important}
+}

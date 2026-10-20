@@ -18,7 +18,7 @@ export const COLS = {
 export const TABS = {
   ventas: ["hoy","pipeline","pendientes","recordatorios","frentes"],
   direccion: ["hoy","pendientes","recordatorios","frentes","pipeline"],
-  personal: ["pipeline","pendientes","recordatorios"]
+  personal: ["pipeline","pendientes","recordatorios","frentes"]
 };
 
 export const STATUSES = ["Por hacer","En curso","Bloqueada","Hecha"];
@@ -60,11 +60,13 @@ export const SECCIONES = {
       { id:"cowboys",     rotulo:"Cowboys",                    seccion:"entretenimiento" },
       { id:"f1",          rotulo:"F1",                         seccion:"entretenimiento" },
       { id:"yoga",        rotulo:"Yoga",                       seccion:"entretenimiento" },
-      { id:"salud",       rotulo:"Estudios de salud",          seccion:"entretenimiento" },
-      // Agregado 2-sep-2026: la rutina de curación insertó tema="autos" antes de que
-      // existiera esta pestaña, y la pieza quedó invisible. Se abre la pestaña en vez de
-      // descartar el contenido — Pablo la pidió explícitamente al ampliar la curación.
-      { id:"autos",       rotulo:"Autos",                       seccion:"entretenimiento" }
+      // 19-oct-2026: Pablo amplió salud de "estudios" a avances médicos E industria
+      // (farmacéuticas, biotech, hospitales, aprobaciones regulatorias).
+      { id:"salud",       rotulo:"Salud: avances e industria", seccion:"entretenimiento" },
+      // 19-oct-2026: "autos" se cambió por "luxury" para su perfil y el de sus
+      // clientes: notas de alto impacto del mundo del lujo. Las piezas viejas con
+      // tema="autos" siguen en `feed`, pero ya no tienen pestaña.
+      { id:"luxury",      rotulo:"Luxury",                     seccion:"entretenimiento" }
     ]
   }
 };

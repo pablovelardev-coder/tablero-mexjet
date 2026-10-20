@@ -19,6 +19,7 @@ Contexto del proyecto para retomar el trabajo en futuras sesiones.
 | Archivos locales de rutinas | **Solo en la Mac** | `~/.claude/scheduled-tasks/` |
 | Conocimiento por entidad (wiki) | Repo privado del vault | `pablovelardev-coder/segundo-cerebro` |
 | Respaldo de los tableros | Supabase → `boards_backup` | `where kind = … order by taken_at desc` |
+| Historia de movimientos de tarjetas | Supabase → `card_events` | `where kind = … order by at desc` |
 | Histórico de disponibilidad de flota | Supabase → `flota_dia`, `flota_evento` | solo conector admin; la app no las lee |
 
 ## Qué es
@@ -87,6 +88,20 @@ Inteligencia comercial. **Una fila por pieza**, no un JSON monolítico:
   Cada acción de la app es un `UPDATE` de un solo campo de una sola fila. Así el
   bug que vació los tableros dos veces no puede repetirse aquí.
 
+Tabla **`card_events`** *(19-oct-2026)* — historia de movimientos de tarjetas.
+Una fila cada vez que una tarjeta **entra** al tablero (`from_col` nulo), **cambia
+de columna** o **sale** (`to_col` nulo). La escribe el trigger
+`boards_registra_movimientos_trg` sobre `boards`; nadie más.
+
+- **RLS activo:** el dueño lee lo suyo (`card_events_lee_su_dueno`); `insert`,
+  `update` y `delete` revocados a `anon` y `authenticated`. La app solo lee.
+- Lo anterior al 19-oct se reconstruyó desde `boards_backup` con
+  `origen = 'respaldo'`: la fecha de un alta reconstruida es la del primer
+  respaldo donde aparece la tarjeta — "al menos desde", no la fecha real.
+  La historia empieza el 1-ago-2026.
+- Migración en `supabase/migrations/20261019_card_events_y_limpiar_feed.sql`,
+  junto con `limpiar_feed()` (ver *Curación del feed*).
+
 Tabla **`boards_backup`** — snapshots de `boards`:
 
 | Columna | Notas |
@@ -139,7 +154,18 @@ sus propias columnas de pipeline y su propio orden de pestañas.
   (≤7 días) en ámbar, hechas tachadas. Estados: Por hacer / En curso /
   Bloqueada / Hecha.
 - **Recordatorios** — acciones programadas por fecha.
-- **Frentes** — barras de avance con slider de porcentaje.
+- **Hoy** (Ventas y Dirección) — el HUD de la Cabina arriba (yo debo · me deben ·
+  decisiones · frentes en alerta · movimientos y cerradas de la semana), los dos
+  montones de deuda, las decisiones que desbloquean y la salud del tablero. En
+  Ventas, además, el **radar de contenido**: lo más nuevo sin leer de Inteligencia
+  comercial y Aviación.
+- **Frentes** *(Ventas, Dirección y Personal)* — una **cinta por frente**: cuántas
+  tarjetas hay en cada etapa, qué % ya pasó de la primera, cuándo se movió por
+  última vez y cuántos cambios de etapa, altas y cierres tuvo en 30 días. **En rojo**
+  el frente con tarjetas vivas y 21 días o más sin movimiento. Debajo, la bitácora
+  de movimientos (`card_events`). Se calcula solo; los deslizadores de % a mano
+  siguen, plegados, pero ya nada depende de ellos. Lógica en `js/ui/instrumentos.js`,
+  que **solo lee**.
 
 **Guardado:** con debounce de 400ms (`save()` → `upsert()`); indicador de
 estado en la cabecera ("guardando…" / "✓ sincronizado HH:MM" / "actualizando…" /
@@ -166,7 +192,8 @@ pestaña.
 ```
 .
 ├── index.html          # solo markup: el gate, la app y el diálogo de tarjeta
-├── css/styles.css      # todos los estilos (variables CSS, claro/oscuro)
+├── css/styles.css      # estilos base (variables CSS, claro/oscuro)
+├── css/cabina.css      # tema Cabina: se carga después y solo redefine apariencia
 ├── js/
 │   ├── main.js         # entrada: engancha los módulos y arranca con la sesión
 │   ├── config.js       # cliente de Supabase, COLS, TABS, STATUSES, paleta
@@ -182,12 +209,14 @@ pestaña.
 │       ├── card-dialog.js  # ventana de edición: etiquetas, checklist, rems
 │       ├── tasks.js        # pestaña Pendientes y su filtro por tema
 │       ├── rems.js         # pestaña Recordatorios
-│       └── frentes.js      # pestaña Frentes
+│       ├── frentes.js      # deslizadores de avance manual (pestaña Frentes)
+│       └── instrumentos.js # Cabina: HUD de Hoy, cintas por frente, bitácora, radar
 ├── supabase/
 │   ├── migrations/     # cambios de esquema versionados (triggers de boards)
 │   └── tests/          # su prueba en SQL, contra un Postgres local
 ├── tests/
-│   └── sync.test.mjs   # prueba de js/sync.js en Chromium, sin red
+│   ├── sync.test.mjs   # prueba de js/sync.js en Chromium, sin red
+│   └── instrumentos.test.mjs # prueba de la Cabina (HUD, cintas, catálogo), sin red
 ├── README.md
 └── CLAUDE.md           # este archivo
 ```
@@ -230,7 +259,14 @@ que mandar un evento, no una importación.
   Supabase real, así que lo que se toque en local **se guarda de verdad**.
 - Estilos con variables CSS y soporte de **tema claro/oscuro** vía
   `prefers-color-scheme`.
-- **Lenguaje visual de Apple (iOS 26 / macOS 26)** desde oct-2026: colores y
+- 🛩️ **Tema Cabina** *(19-oct-2026, elegido por Pablo entre Cabina · Revista ·
+  Pulso)*: tablero de instrumentos, **oscuro a propósito**. Ámbar = lo que Pablo
+  debe, cian = lo que le deben, rojo = alerta, verde = avance o cierre. Rótulos en
+  Barlow Condensed (mayúsculas), texto en Barlow, cifras y fechas en JetBrains
+  Mono (Google Fonts). Vive entero en `css/cabina.css`, que se carga después de
+  `styles.css` y **solo redefine tokens y apariencia**: quitar esa línea del
+  `index.html` regresa al lenguaje de Apple sin tocar nada más.
+- Base: **lenguaje visual de Apple (iOS 26 / macOS 26)** desde oct-2026: colores y
   fondos agrupados del sistema, barras de vidrio (`backdrop-filter`), controles
   en cápsula, título grande por tablero. En iPhone (≤720 px) el selector de
   tablero baja a una barra de pestañas flotante. El vidrio del header va en
@@ -356,6 +392,19 @@ Escribe en `feed`, nunca en `boards`.
 ni FT. Guarda la liga para que Pablo la abra con su suscripción, pero tiene
 instrucción de **no inventar detalle que no pudo leer**.
 
+**Catálogo de temas** — cerrado; un tema fuera de catálogo queda invisible en la
+app. El 19-oct-2026 Pablo cambió `autos` por **`luxury`** (notas de alto impacto del
+mundo del lujo: relojería, yates, autos de colección y subastas, arte,
+hospitalidad, el negocio del lujo) y amplió `salud` a **avances e industria**
+(farmacéuticas, biotech, hospitales, aprobaciones regulatorias). Las piezas viejas
+con `tema='autos'` siguen en `feed` sin pestaña. `finanzas` bajó a **1 pieza** de
+alto impacto: en dos meses se guardaron 40 y se leyeron 6.
+
+**Limpieza:** la rutina corre `select public.limpiar_feed();` (borra lo leído de más
+de 30 días que no se guardó ni se descartó). Antes mandaba un `DELETE` a mano, y el
+conector de Supabase lo detenía pidiendo una confirmación que en la nube nadie da:
+la corrida se caía por *timeout*.
+
 **Volumen:** inteligencia comercial hasta 6 · capacitación 2 por tema ·
 entretenimiento 1 por tema. Se subió inteligencia y se bajó entretenimiento el
 1-sep, porque la primera corrida trajo 10 de entretenimiento y 1 de
@@ -368,7 +417,7 @@ inteligencia:
 |---|---|---|
 | `inteligencia` | **30 días** | Un anuncio de planta o un cambio de director general sigue siendo un lead vivo semanas después. Con 7 días la sección salía casi vacía **aunque la búsqueda sí encontrara material bueno** — se descartaban NIFCO en Apodaca, KIA en Pesquería, el nuevo DG de Metalsa y el relevo de CEO en Nemak. |
 | `capacitacion` | 14 días (30 para papers) | El análisis firmado no caduca en una semana. |
-| `entretenimiento` | 7 días | Aquí sí caduca rápido. |
+| `entretenimiento` | 7 días (14 para `luxury` y `salud`) | Aquí sí caduca rápido. |
 
 ⚠️ **Dominios bloqueados por el proxy del entorno cloud:** `clusterindustrial.com.mx`,
 `mexicoindustry.com` y `nl.gob.mx` no se pueden abrir con WebFetch, aunque sí
@@ -624,6 +673,13 @@ siembre un tablero vacío, y que la app **no escriba nada al arrancar**:
 NODE_PATH="$(npm root -g)" node tests/sync.test.mjs
 ```
 
+La Cabina tiene la suya, con el mismo encierro (cliente falso con datos
+inventados, red abortada, falla si la app intenta **cualquier** escritura):
+
+```
+NODE_PATH="$(npm root -g)" node tests/instrumentos.test.mjs
+```
+
 Antes de dar por buena una prueba, **sabotear el código y ver que falle**. Al
 escribir ésta, una de las 16 pasaba sin importar lo que hiciera el código (un
 `indexOf` que daba -1); solo el sabotaje lo descubrió.
@@ -663,3 +719,7 @@ escribir ésta, una de las 16 pasaba sin importar lo que hiciera el código (un
 13. La pestaña se recarga al volver de segundo plano y el guardado rechazado por
     la base se recarga y avisa, en vez de decir "error de conexión"
     (`js/sync.js`). Prueba en `tests/sync.test.mjs`.
+14. Tema **Cabina** (`css/cabina.css`), pestaña Frentes con cintas automáticas y
+    bitácora a partir de `card_events`, HUD y radar de contenido en Hoy, Frentes en
+    Personal, y catálogo de Entretenimiento con `luxury` en vez de `autos`
+    (`js/ui/instrumentos.js`). Prueba en `tests/instrumentos.test.mjs`.
