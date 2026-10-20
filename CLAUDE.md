@@ -220,7 +220,8 @@ pestaña.
 │   └── tests/          # su prueba en SQL, contra un Postgres local
 ├── tests/
 │   ├── sync.test.mjs   # prueba de js/sync.js en Chromium, sin red
-│   └── instrumentos.test.mjs # prueba de la Cabina (HUD, cintas, catálogo), sin red
+│   ├── instrumentos.test.mjs # prueba de la Cabina (HUD, cintas, catálogo), sin red
+│   └── fechas.test.mjs # "hoy" en hora local, con el reloj a las 20:00 de Monterrey
 ├── README.md
 └── CLAUDE.md           # este archivo
 ```
@@ -684,6 +685,13 @@ inventados, red abortada, falla si la app intenta **cualquier** escritura):
 NODE_PATH="$(npm root -g)" node tests/instrumentos.test.mjs
 ```
 
+Y las fechas de `js/util.js` (`today`, `addDays`, `diasDesde`, `dueClass`) la
+suya, con el reloj fijo a las **20:00 de Monterrey**, cuando en UTC ya es mañana:
+
+```
+NODE_PATH="$(npm root -g)" node tests/fechas.test.mjs
+```
+
 Antes de dar por buena una prueba, **sabotear el código y ver que falle**. Al
 escribir ésta, una de las 16 pasaba sin importar lo que hiciera el código (un
 `indexOf` que daba -1); solo el sabotaje lo descubrió.
@@ -727,3 +735,9 @@ escribir ésta, una de las 16 pasaba sin importar lo que hiciera el código (un
     bitácora a partir de `card_events`, HUD y radar de contenido en Hoy, Frentes en
     Personal, y catálogo de Entretenimiento con `luxury` en vez de `autos`
     (`js/ui/instrumentos.js`). Prueba en `tests/instrumentos.test.mjs`.
+15. "Hoy" en hora local (`js/util.js`): `today()` y `addDays()` usaban
+    `toISOString()`, el día de UTC, que después de las 18:00 de Monterrey ya es
+    mañana — vencidas un día antes, atrasos y "N días sin movimiento" corridos en
+    uno, y la tarea nueva nacía con fecha de mañana. `diasDesde` y `dueClass`
+    restan días de calendario; `instrumentos.js` usa ya el `diasDesde` de util.
+    Prueba en `tests/fechas.test.mjs`.

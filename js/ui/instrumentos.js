@@ -9,7 +9,7 @@
 // ni en `feed`. Si la consulta falla, pinta con lo que tiene el tablero en memoria.
 import { sb, COLS } from "../config.js";
 import { app, D } from "../state.js";
-import { $, esc, clip, fchCorta } from "../util.js";
+import { $, esc, clip, fchCorta, diasDesde } from "../util.js";
 import { showTab } from "../nav.js";
 import { ladoDe, decisionesQueDesbloquean } from "./dashboard.js";
 
@@ -54,16 +54,6 @@ function movimientos(kind) {
 const dia = at => {
   const s = String(at || "");
   return s.includes("T") ? new Date(s).toLocaleDateString("en-CA") : s.slice(0, 10);
-};
-
-// Días entre una fecha AAAA-MM-DD y hoy, los dos en hora local. `diasDesde` de
-// util.js compara contra el "hoy" en UTC, que después de las 18:00 de Monterrey
-// ya es mañana: un movimiento de anteayer salía "hace 3 d".
-const diasDesde = ymd => {
-  if (!ymd) return null;
-  const [y, m, d] = ymd.split("-").map(Number);
-  const h = new Date();
-  return Math.round((Date.UTC(h.getFullYear(), h.getMonth(), h.getDate()) - Date.UTC(y, m - 1, d)) / 864e5);
 };
 
 export function cintas(kind, cards, ev, tasks = []) {
