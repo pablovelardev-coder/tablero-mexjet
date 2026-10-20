@@ -56,19 +56,31 @@ const dia = at => {
   return s.includes("T") ? new Date(s).toLocaleDateString("en-CA") : s.slice(0, 10);
 };
 
-export function cintas(kind, cards, ev) {
+export function cintas(kind, cards, ev, tasks = []) {
   const cols = (COLS[kind] || []).map(c => c[0]);
   const fuera = FUERA[kind] || [], cierre = CIERRE[kind] || [];
   const porId = Object.fromEntries(cards.map(c => [c.id, c]));
+  const abiertas = tasks.filter(t => t.status !== "Hecha");
   const g = {};
 
   cards.forEach(c => {
     if (c.col === "archivo") return;
     const f = c.frente || "Sin frente";
-    const x = g[f] ||= { frente: f, n: {}, total: 0, vivas: 0, ultimo: null, mov30: 0, altas30: 0, cerr30: 0 };
+    const x = g[f] ||= { frente: f, n: {}, total: 0, vivas: 0, sinSig: 0, ultimo: null, mov30: 0, altas30: 0, cerr30: 0, pend: new Map() };
     x.n[c.col] = (x.n[c.col] || 0) + 1;
     x.total++;
-    if (!fuera.includes(c.col) && !cierre.includes(c.col)) x.vivas++;
+    if (!fuera.includes(c.col) && !cierre.includes(c.col)) {
+      x.vivas++;
+      if (!(c.siguiente && c.siguiente.texto)) x.sinSig++;
+    }
+    // Pendientes abiertos de la tarjeta, con la misma regla que su cara en el
+    // pipeline (board.js): por `tids` si los tiene, si no por su frente. En Ventas
+    // los pendientes llevan frente "MexJet · Comercial" a propósito y se ligan
+    // por `tids`; por eso no se cuentan solo por frente.
+    const tie = Array.isArray(c.tids) && c.tids.length;
+    abiertas.forEach(t => {
+      if (tie ? c.tids.includes(t.id) : (c.frente && (t.frente || "") === c.frente)) x.pend.set(t.id, t);
+    });
     // La última acción capturada en la tarjeta también es movimiento.
     const u = (c.ultima || {}).fecha;
     if (u && (!x.ultimo || u > x.ultimo)) x.ultimo = u;
@@ -94,6 +106,9 @@ export function cintas(kind, cards, ev) {
     const base = enJuego.reduce((s, k) => s + (x.n[k] || 0), 0);
     const pasaron = enJuego.slice(1).reduce((s, k) => s + (x.n[k] || 0), 0);
     x.avance = base ? Math.round(pasaron / base * 100) : 0;
+    const pend = [...x.pend.values()];
+    x.pend = pend.length;
+    x.venc = pend.filter(t => { const d = diasDesde(t.due); return d !== null && d > 0 }).length;
     return x;
   }).sort((a, b) => (b.total - a.total) || a.frente.localeCompare(b.frente));
 }
@@ -108,6 +123,9 @@ function pieCinta(x) {
   if (x.mov30) partes.push(`${x.mov30} ${x.mov30 === 1 ? "cambio" : "cambios"} de etapa en 30 d`);
   if (x.altas30) partes.push(`${x.altas30} ${x.altas30 === 1 ? "alta" : "altas"}`);
   if (x.cerr30) partes.push(`<span class="cinta-cierre">${x.cerr30} ${x.cerr30 === 1 ? "cerrada" : "cerradas"}</span>`);
+  if (x.pend) partes.push(`${x.pend} ${x.pend === 1 ? "pendiente" : "pendientes"}`
+    + (x.venc ? ` (<span class="cinta-alerta">${x.venc} ${x.venc === 1 ? "vencido" : "vencidos"}</span>)` : ""));
+  if (x.sinSig) partes.push(`${x.sinSig} sin siguiente acción`);
   return partes.join(" · ");
 }
 
@@ -220,7 +238,7 @@ export function renderInstrumentos() {
   if (!D() || !COLS[app.cur]) return;
   const kind = app.cur;
   const ev = movimientos(kind);
-  const lista = cintas(kind, D().cards || [], ev);
+  const lista = cintas(kind, D().cards || [], ev, D().tasks || []);
   pintarHud(kind, lista, ev);
   pintarCintas(kind, lista);
   pintarBitacora(kind, ev);

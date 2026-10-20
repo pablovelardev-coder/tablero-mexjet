@@ -39,11 +39,16 @@ function datosDePrueba() {
       { id: "b1", title: "Cuenta Cuatro", frente: "Frente Beta", col: "nego", ultima: { fecha: dia(3), texto: "Revisión de contrato" } },
       { id: "b2", title: "Cuenta Cinco",  frente: "Frente Beta", col: "win" },
       { id: "b3", title: "Cuenta Seis",   frente: "Frente Beta", col: "lost" },
+      // Como en Ventas de verdad: el pendiente lleva otro frente y se liga por tids.
+      { id: "g1", title: "Cuenta Ocho",   frente: "Frente Gamma", col: "prop", tids: ["t9"],
+        ultima: { fecha: dia(1), texto: "Propuesta enviada" }, siguiente: { fecha: dia(-5), texto: "Seguimiento" } },
     ],
     tasks: [
       { id: "t1", text: "Mandar propuesta a Cuenta Uno", frente: "Frente Alfa", status: "Por hacer", due: dia(2) },
       { id: "t2", text: "Esperando firma de Cuenta Cuatro", frente: "Frente Beta", status: "En curso" },
       { id: "t3", text: "Definir si se renueva Cuenta Seis", frente: "Frente Beta", status: "Bloqueada" },
+      { id: "t9", text: "Revisar contrato de Cuenta Ocho", frente: "MexJet · Comercial", status: "Por hacer", due: dia(-10) },
+      { id: "t0", text: "Mandar algo ya resuelto", frente: "Frente Alfa", status: "Hecha", due: dia(9) },
     ],
     rems: [], frentes: [{ name: "Frente Alfa", pct: 0 }],
   };
@@ -165,7 +170,7 @@ caso("Hoy en Ventas: el HUD cuenta deudas, frentes en alerta y movimientos de la
   await page.waitForFunction(() => document.querySelectorAll("#dashHud .cell").length === 6);
   await page.waitForFunction(() => document.querySelector("#dashRadar .radar-it"));
   const hud = await page.$$eval("#dashHud .cell", cs => Object.fromEntries(cs.map(c => [c.querySelector("span").textContent, c.querySelector("b").textContent])));
-  assert.equal(hud["Yo debo"], "2");            // t1 (verbo de entrega) y t3 (sin señal → debo)
+  assert.equal(hud["Yo debo"], "3");            // t1 y t9 (verbo de entrega) y t3 (sin señal → debo)
   assert.equal(hud["Me deben"], "1");           // t2 ("esperando firma")
   assert.equal(hud["Frentes en alerta"], "1");  // Alfa: 40 días sin moverse
   assert.equal(hud["Movimientos 7 d"], "1");
@@ -197,11 +202,18 @@ caso("Frentes: una cinta por frente, con avance, alerta y bitácora; el archivo 
   assert.equal(alfa.em, "3 tarjetas · 33% avanzó");     // el archivo no cuenta
   assert.equal(alfa.alerta, true);
   assert.match(alfa.pie, /40 d sin movimiento/);
+  assert.match(alfa.pie, /1 pendiente \(1 vencido\)/);   // t1; t0 ya está Hecha
+  assert.match(alfa.pie, /3 sin siguiente acción/);
   assert.equal(alfa.segmentos, 2);                        // lead y prop
   assert.equal(beta.em, "3 tarjetas · 100% avanzó");     // lo perdido no cuenta para avance
   assert.equal(beta.alerta, false);
   assert.match(beta.pie, /hace 2 d/);
   assert.match(beta.pie, /1 cerrada/);
+  assert.match(beta.pie, /2 pendientes/);
+  assert.doesNotMatch(beta.pie, /vencido/);
+  const gamma = cintas.find(c => c.nombre === "Frente Gamma");
+  assert.match(gamma.pie, /1 pendiente/);                  // ligado por tids, no por frente
+  assert.doesNotMatch(gamma.pie, /sin siguiente acción/);
   const movs = await page.$$eval("#bitacora .mov", ms => ms.map(m => m.textContent.replace(/\s+/g, " ").trim()));
   assert.equal(movs.length, 3);
   assert.match(movs[0], /Cuenta Cinco Negociación → Ganado/);

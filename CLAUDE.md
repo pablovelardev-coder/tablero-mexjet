@@ -161,7 +161,11 @@ sus propias columnas de pipeline y su propio orden de pestañas.
   comercial y Aviación.
 - **Frentes** *(Ventas, Dirección y Personal)* — una **cinta por frente**: cuántas
   tarjetas hay en cada etapa, qué % ya pasó de la primera, cuándo se movió por
-  última vez y cuántos cambios de etapa, altas y cierres tuvo en 30 días. **En rojo**
+  última vez, cuántos cambios de etapa, altas y cierres tuvo en 30 días, cuántos
+  pendientes abiertos (y vencidos) tiene y cuántas tarjetas vivas no tienen
+  siguiente acción. Los pendientes se cuentan con la misma regla que la cara de
+  la tarjeta: por `tids` si los tiene, si no por frente — en Ventas los pendientes
+  llevan `MexJet · Comercial` y solo cruzan por `tids`. **En rojo**
   el frente con tarjetas vivas y 21 días o más sin movimiento. Debajo, la bitácora
   de movimientos (`card_events`). Se calcula solo; los deslizadores de % a mano
   siguen, plegados, pero ya nada depende de ellos. Lógica en `js/ui/instrumentos.js`,
