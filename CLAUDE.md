@@ -380,6 +380,11 @@ Rutina cloud **`Curación del feed`** (`trig_01DAsAuygxaKnRWN4cDw5YCv`), lunes a
 viernes 7:30 am, más *pull* a mano desde https://claude.ai/code/routines.
 Escribe en `feed`, nunca en `boards`.
 
+**Prioridad alta** *(Pablo, 20-oct-2026)*: lo que lee y paga — **El Norte** (también
+para deportes y Rayados) y **Whitepaper** (newsletter de negocios). Si la misma
+noticia sale ahí y en otro medio, gana ésa. Para `rayados`, RG La Deportiva y El
+Norte Cancha van antes que los medios nacionales (Record, ESPN, Infobae).
+
 **Prioridad de fuente**, en este orden — es lo que Pablo pidió explícitamente:
 
 1. **Prensa validada**, mexicana y de **Estados Unidos**. Tiene suscripción a
