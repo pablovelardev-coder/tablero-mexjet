@@ -79,6 +79,8 @@ async function nuevaPagina({ reloj = false, url = "/__prueba__", antes } = {}) {
       try { return route.fulfill({ contentType: tipo, body: readFileSync(archivo) }) }
       catch { return route.fulfill({ status: 404, body: "" }) }
     }
+    // Las tipografías del tema Cabina: se contestan vacías, sin salir a la red.
+    if (url.startsWith("https://fonts.googleapis.com/")) return route.fulfill({ contentType: "text/css", body: "" });
     fugas.push(url);           // nada más puede salir
     return route.abort();
   });

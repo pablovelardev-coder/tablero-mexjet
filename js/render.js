@@ -6,6 +6,7 @@ import { renderTasks } from "./ui/tasks.js";
 import { renderRem } from "./ui/rems.js";
 import { renderFrentes } from "./ui/frentes.js";
 import { renderFeed } from "./ui/feed.js";
+import { renderInstrumentos } from "./ui/instrumentos.js";
 import { esSeccion } from "./config.js";
 import { app } from "./state.js";
 
@@ -17,4 +18,5 @@ export function renderAll() {
   renderTasks();
   renderRem();
   renderFrentes();
+  renderInstrumentos();
 }

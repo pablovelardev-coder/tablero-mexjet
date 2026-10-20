@@ -3,13 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0a0f14">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Tablero">
 <title>Tableros · Pablo Velarde</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
 <link rel="stylesheet" href="./css/styles.css">
+<link rel="stylesheet" href="./css/cabina.css">
 </head>
 <body>
 <div id="gate">
@@ -48,6 +51,7 @@
 
     <section class="view" data-v="hoy">
       <div id="dashWrap">
+        <div class="hud" id="dashHud"></div>
         <details class="dinbox">
           <summary>🎯 ¿Qué frentes tocan el bono o el dinero?</summary>
           <p class="sub">Las dos primeras preguntas del orden. El bono gana sobre todo lo demás; el dinero gana sobre externo y sobre bloqueo. Se marca una vez por frente y sirve para todos sus pendientes.</p>
@@ -78,6 +82,12 @@
           <div id="dashSaludDetalle" class="salud-detalle"></div>
           <p class="sub" id="dashSinAsignar" style="margin-top:12px"></p>
         </div>
+
+        <div class="monton hidden" id="dashRadarBox" style="margin-top:16px">
+          <h3 class="monton-t">📡 Radar de contenido</h3>
+          <p class="sub">Lo más nuevo sin leer de Inteligencia comercial y Aviación.</p>
+          <div id="dashRadar" class="radar-lista"></div>
+        </div>
       </div>
     </section>
     <section class="view on" data-v="pipeline"><div class="board" id="board"></div></section>
@@ -92,7 +102,22 @@
       <p><button class="primary" id="addRem">+ Recordatorio</button></p>
     </section>
     <section class="view" data-v="frentes">
-      <p class="sub">Avance por frente de trabajo.</p><div id="frentesWrap"></div>
+      <div class="monton">
+        <h3 class="monton-t">Frentes</h3>
+        <p class="sub">Cada cinta es un frente: cuántas tarjetas hay en cada etapa y cuándo se movió por última vez. Se calcula solo, del tablero y de su historia de movimientos. En rojo, lo que lleva tres semanas o más sin moverse.</p>
+        <div id="frentesAuto"></div>
+        <div class="leyenda" id="frentesLeyenda"></div>
+      </div>
+      <div class="monton" style="margin-top:16px">
+        <h3 class="monton-t">Bitácora de movimientos</h3>
+        <p class="sub" id="bitacoraNota"></p>
+        <div id="bitacora"></div>
+      </div>
+      <details class="dinbox" style="margin-top:16px">
+        <summary>Avance manual (deslizadores)</summary>
+        <p class="sub">El porcentaje capturado a mano. Se conserva, pero las cintas de arriba ya no dependen de él.</p>
+        <div id="frentesWrap"></div>
+      </details>
     </section>
   </main>
 </div>
