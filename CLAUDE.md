@@ -385,6 +385,16 @@ para deportes y Rayados) y **Whitepaper** (newsletter de negocios). Si la misma
 noticia sale ahí y en otro medio, gana ésa. Para `rayados`, RG La Deportiva y El
 Norte Cancha van antes que los medios nacionales (Record, ESPN, Infobae).
 
+**Reglas que destrabaron el volumen** *(20-oct-2026, con el sí de Pablo; el 19 y el 20-oct la
+rutina trajo 2 y 3 piezas)*:
+- **Un descarte significa "ya lo vi", no "el tema no me interesa".** El gusto se infiere solo de
+  lo guardado. Cowboys y F1 llevan **siempre** el resumen del último partido o carrera.
+- **Fecha:** vale la de la URL o la del extracto de la búsqueda. Si solo se sabe la semana, se
+  toma el día más antiguo y el resumen dice "(fecha aproximada)". Solo se descarta si no hay
+  ninguna señal de fecha.
+- **Capacitación:** al menos 1 pieza por tema cuando haya algo decente en la ventana.
+- En la rutina de info@ale, **Whitepaper** tiene hasta 3 de los 6 lugares del paso de las 9:00.
+
 **Prioridad de fuente**, en este orden — es lo que Pablo pidió explícitamente:
 
 1. **Prensa validada**, mexicana y de **Estados Unidos**. Tiene suscripción a
