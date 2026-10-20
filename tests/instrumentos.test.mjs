@@ -6,7 +6,8 @@
 //   - la librería de Supabase (esm.sh) se reemplaza por un cliente falso que
 //     contesta con datos inventados y anota cualquier intento de escritura,
 //   - cualquier otra petición de red se aborta y hace fallar la prueba
-//     (salvo las tipografías de Google Fonts, que son públicas y solo se leen).
+//     (las tipografías de Google Fonts se contestan vacías; solo con CAPTURAS
+//     se bajan de verdad, porque son públicas y solo se leen).
 //
 // Los datos son ficticios a propósito: el repo es público.
 //
@@ -26,7 +27,7 @@ const ORIGEN = "http://prueba.local";
 const CAPTURAS = process.env.CAPTURAS || "";
 
 const hace = d => new Date(Date.now() - d * 864e5).toISOString();
-const dia = d => hace(d).slice(0, 10);
+const dia = d => new Date(Date.now() - d * 864e5).toLocaleDateString("en-CA");   // fecha local, como la captura Pablo
 
 function datosDePrueba() {
   const ventas = {
@@ -126,8 +127,9 @@ async function abrirApp({ datos = datosDePrueba(), viewport = { width: 1280, hei
     if (url.startsWith("https://esm.sh/@supabase/supabase-js")) {
       return route.fulfill({ contentType: "text/javascript", body: STUB_SUPABASE });
     }
+    // Tipografías: solo se bajan de verdad si se piden capturas; si no, se contestan vacías.
     if (url.startsWith("https://fonts.googleapis.com/") || url.startsWith("https://fonts.gstatic.com/")) {
-      return route.continue();
+      return CAPTURAS ? route.continue() : route.fulfill({ contentType: "text/css", body: "" });
     }
     if (url.startsWith(ORIGEN + "/")) {
       let ruta = new URL(url).pathname;
@@ -259,6 +261,7 @@ caso("iPhone: Hoy y Frentes se ven sin desbordar a lo ancho", async () => {
   await pestana(page, "Frentes");
   await page.waitForSelector(".cinta");
   await capturar(page, "4-frentes-iphone");
+  assert.deepEqual(await escrituras(page), []);
   await ctx.close();
 });
 
