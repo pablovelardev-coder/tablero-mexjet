@@ -112,6 +112,11 @@ async function recargar(kind) {
   return true;
 }
 
+// Para quien escribe en un tablero que NO es el visible (p. ej. un lead desde
+// Inteligencia): primero trae la versión de la base, para no guardar encima
+// una copia vieja de esta pestaña.
+export const recargarTablero = recargar;
+
 // Recarga los tres tableros de la base. Antes manda lo pendiente y espera a que
 // llegue: si recargara primero, leería la versión de antes de ese guardado y la
 // pantalla regresaría a ella.

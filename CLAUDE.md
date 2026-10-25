@@ -170,6 +170,14 @@ sus propias columnas de pipeline y su propio orden de pestañas.
   de movimientos (`card_events`). Se calcula solo; los deslizadores de % a mano
   siguen, plegados, pero ya nada depende de ellos. Lógica en `js/ui/instrumentos.js`,
   que **solo lee**.
+- **Capacitación › Inteligencia comercial** — cada nota trae **→ lead en Ventas**:
+  pide a nombre de quién va y crea la tarjeta en **Prospecto** (frente
+  Prospección, etiqueta Inteligencia, `origen: {feed_id, fuente_url}`), y marca la
+  nota leída. Como Ventas no es el tablero visible, **primero lo recarga de la
+  base** (`recargarTablero` en `js/sync.js`) y luego **agrega** al arreglo; si la
+  base lo rechaza, aplica lo de *Guardado rechazado*. La nota que ya tiene tarjeta
+  sale como **✓ en Ventas**. Lógica en `js/ui/feed.js`; prueba en
+  `tests/lead-desde-nota.test.mjs`.
 
 **Guardado:** con debounce de 400ms (`save()` → `upsert()`); indicador de
 estado en la cabecera ("guardando…" / "✓ sincronizado HH:MM" / "actualizando…" /
@@ -221,7 +229,8 @@ pestaña.
 ├── tests/
 │   ├── sync.test.mjs   # prueba de js/sync.js en Chromium, sin red
 │   ├── instrumentos.test.mjs # prueba de la Cabina (HUD, cintas, catálogo), sin red
-│   └── fechas.test.mjs # "hoy" en hora local, con el reloj a las 20:00 de Monterrey
+│   ├── fechas.test.mjs # "hoy" en hora local, con el reloj a las 20:00 de Monterrey
+│   └── lead-desde-nota.test.mjs # botón de Inteligencia → tarjeta en Ventas, sin red
 ├── README.md
 └── CLAUDE.md           # este archivo
 ```
@@ -707,6 +716,13 @@ suya, con el reloj fijo a las **20:00 de Monterrey**, cuando en UTC ya es mañan
 NODE_PATH="$(npm root -g)" node tests/fechas.test.mjs
 ```
 
+Y el botón de Inteligencia que crea la tarjeta en Ventas (recarga antes, agrega
+sin quitar nada, no duplica, no escribe si no pudo leer):
+
+```
+NODE_PATH="$(npm root -g)" node tests/lead-desde-nota.test.mjs
+```
+
 Antes de dar por buena una prueba, **sabotear el código y ver que falle**. Al
 escribir ésta, una de las 16 pasaba sin importar lo que hiciera el código (un
 `indexOf` que daba -1); solo el sabotaje lo descubrió.
@@ -756,3 +772,6 @@ escribir ésta, una de las 16 pasaba sin importar lo que hiciera el código (un
     uno, y la tarea nueva nacía con fecha de mañana. `diasDesde` y `dueClass`
     restan días de calendario; `instrumentos.js` usa ya el `diasDesde` de util.
     Prueba en `tests/fechas.test.mjs`.
+16. Inteligencia comercial → Ventas con un clic (`js/ui/feed.js`): cada nota crea
+    su tarjeta en Prospecto, recargando Ventas de la base antes de agregar.
+    Prueba en `tests/lead-desde-nota.test.mjs`.

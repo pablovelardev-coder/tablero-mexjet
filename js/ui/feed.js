@@ -5,9 +5,10 @@
 // UPDATE de esa fila. Es la regla que sale del borrado de tableros: un upsert
 // de fila completa es un borrado esperando su turno.
 import { sb, SECCIONES } from "../config.js";
-import { app } from "../state.js";
-import { $, esc, clip } from "../util.js";
-import { setSync } from "../sync.js";
+import { app, S } from "../state.js";
+import { $, esc, clip, uid, today } from "../util.js";
+import { setSync, upsert, recargarTablero } from "../sync.js";
+import { emit } from "../bus.js";
 
 // Caché en memoria por sección. Se recarga al entrar, no en cada repintado.
 const FEED = {};
@@ -46,6 +47,57 @@ async function marcar(pieza, campo, valor) {
   setSync(error ? "error" : "ok");
 }
 
+// --- De una nota de Inteligencia a una tarjeta de Ventas ---------------------
+// Una nota de inteligencia es un lead antes que una noticia: con un clic se
+// vuelve tarjeta en la columna Prospecto de Ventas. La tarjeta guarda de qué
+// pieza salió (`origen`), y con eso el botón sabe que ya se mandó.
+//
+// ⚠️ Ventas no es el tablero visible, así que su copia en memoria pudo quedar
+// vieja: se recarga de la base antes de agregar, y se agrega al arreglo (nunca
+// se reescribe). Si la base rechaza el guardado, sync.js recarga y avisa.
+
+export function yaEnVentas(p) {
+  return ((S.ventas && S.ventas.cards) || []).some(c =>
+    (c.origen && c.origen.feed_id === p.id) || (p.fuente_url && (c.meta || "").includes(p.fuente_url)));
+}
+
+export function tarjetaDesdeNota(p, nombre) {
+  return {
+    id: "v_intel_" + today().replace(/-/g, "") + "_" + uid(),
+    col: "lead",
+    title: nombre,
+    frente: "Prospección",
+    labels: ["Inteligencia"],
+    meta: [p.titulo, p.resumen || "", "Fuente: " + (p.fuente_nombre || "") + (p.fuente_url ? " — " + p.fuente_url : "")]
+            .filter(Boolean).join("\n\n"),
+    ultima: { fecha: today(), texto: "Salió de Inteligencia: " + clip(p.titulo, 90) },
+    siguiente: { fecha: "", quien: "Pablo", texto: "Calificar: quién decide y cómo viaja hoy" },
+    origen: { feed_id: p.id, fuente_url: p.fuente_url || "" },
+  };
+}
+
+async function mandarAVentas(p, boton) {
+  const nombre = (prompt("¿A nombre de quién va la tarjeta? (empresa o persona)", clip(p.titulo, 60)) || "").trim();
+  if (!nombre) return;
+  boton.disabled = true;
+  setSync("saving");
+  if (!(await recargarTablero("ventas"))) {
+    setSync("error");
+    boton.disabled = false;
+    alert("No se pudo leer el tablero de Ventas. No se creó la tarjeta; intenta de nuevo.");
+    return;
+  }
+  if (yaEnVentas(p)) { renderFeed(); setSync("ok"); return }
+  const card = tarjetaDesdeNota(p, nombre);
+  S.ventas.cards = (S.ventas.cards || []).concat(card);
+  await upsert("ventas");
+  // Si la base lo rechazó, sync.js ya recargó Ventas sin la tarjeta y avisó.
+  if (!S.ventas.cards.some(c => c.id === card.id)) { renderFeed(); return }
+  emit("datos-cambiaron");
+  if (!p.leido) await marcar(p, "leido", true);
+  else renderFeed();
+}
+
 function tarjeta(p) {
   const el = document.createElement("article");
   el.className = "pieza" + (p.leido ? " leida" : "") + (p.guardado ? " guardada" : "");
@@ -61,8 +113,13 @@ function tarjeta(p) {
       ${p.fuente_url ? `<a href="${esc(p.fuente_url)}" target="_blank" rel="noopener noreferrer">abrir fuente ↗</a>` : ""}
       <button type="button" class="mini b-leido">${p.leido ? "✓ leído" : "marcar leído"}</button>
       <button type="button" class="mini b-guardar">${p.guardado ? "★ guardado" : "☆ guardar"}</button>
+      ${p.seccion === "inteligencia" ? (yaEnVentas(p)
+        ? `<button type="button" class="mini b-lead" disabled>✓ en Ventas</button>`
+        : `<button type="button" class="mini b-lead" title="Crear tarjeta en Ventas, columna Prospecto">→ lead en Ventas</button>`) : ""}
       <button type="button" class="mini b-descartar" title="No volver a mostrarla">✕</button>
     </div>`;
+  const bLead = el.querySelector(".b-lead");
+  if (bLead && !bLead.disabled) bLead.onclick = () => mandarAVentas(p, bLead);
   el.querySelector(".b-leido").onclick     = () => marcar(p, "leido", !p.leido);
   el.querySelector(".b-guardar").onclick   = () => marcar(p, "guardado", !p.guardado);
   el.querySelector(".b-descartar").onclick = () => marcar(p, "descartado", true);
