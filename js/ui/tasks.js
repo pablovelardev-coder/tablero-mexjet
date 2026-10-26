@@ -1,9 +1,10 @@
 // Pestaña Pendientes: tabla editable con semáforo por fecha de vencimiento.
 import { STATUSES } from "../config.js";
-import { D } from "../state.js";
+import { app, D } from "../state.js";
 import { $, esc, uid, today, dueClass } from "../util.js";
 import { save } from "../sync.js";
 import { showTab } from "../nav.js";
+import { encargar } from "./encargo.js";
 
 // Filtro activo cuando se entra desde "ver los N pendientes" de una tarjeta.
 let TASKFILTER = null;
@@ -45,13 +46,14 @@ export function renderTasks() {
     tr.className = (t.status === "Hecha" ? "done " : "") + dueClass(t.due, t.status);
     tr.innerHTML = `<td><input type="date" value="${t.due||""}"></td><td><input value="${esc(t.text)}"></td>
       <td><input value="${esc(t.frente||"")}"></td><td><select>${STATUSES.map(s => `<option ${s===t.status?"selected":""}>${s}</option>`).join("")}</select></td>
-      <td><button class="mini">✕</button></td>`;
+      <td class="acciones"><button class="mini b-encargo" title="Encargar a Claude">🤖</button><button class="mini b-borrar">✕</button></td>`;
     const [d, tx, fr, st] = tr.querySelectorAll("input,select");
     d.onchange = e => { t.due = e.target.value; save(); renderTasks() };
     tx.onchange = e => { t.text = e.target.value; save() };
     fr.onchange = e => { t.frente = e.target.value; save() };
     st.onchange = e => { t.status = e.target.value; save(); renderTasks() };
-    tr.querySelector("button").onclick = () => { D().tasks = D().tasks.filter(x => x.id !== t.id); save(); renderTasks() };
+    tr.querySelector(".b-borrar").onclick = () => { D().tasks = D().tasks.filter(x => x.id !== t.id); save(); renderTasks() };
+    tr.querySelector(".b-encargo").onclick = () => encargar({ kind: app.cur, tipo: "pendiente", id: t.id, titulo: t.text });
     tb.appendChild(tr);
   });
 }

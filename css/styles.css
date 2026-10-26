@@ -164,6 +164,8 @@ td input:focus,td select:focus{background:var(--fill);box-shadow:none}
 .done td{opacity:.45}.done td input{text-decoration:line-through}
 td button.mini{background:transparent;color:var(--muted);padding:3px 8px}
 td button.mini:hover{color:var(--lost);background:color-mix(in srgb,var(--lost) 12%,transparent)}
+td button.mini.b-encargo:hover{color:inherit;background:color-mix(in srgb,var(--muted) 18%,transparent)}
+td.acciones{white-space:nowrap;width:1%}
 .view > p > button.primary{margin-top:4px}
 .filtro{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;background:color-mix(in srgb,var(--accent) 10%,transparent);
   color:var(--ink);border-radius:999px;padding:4px 6px 4px 14px;font-size:13px;margin:0 0 10px}
