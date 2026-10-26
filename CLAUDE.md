@@ -178,6 +178,15 @@ sus propias columnas de pipeline y su propio orden de pestañas.
   base lo rechaza, aplica lo de *Guardado rechazado*. La nota que ya tiene tarjeta
   sale como **✓ en Ventas**. Lógica en `js/ui/feed.js`; prueba en
   `tests/lead-desde-nota.test.mjs`.
+- **🤖 Encargar a Claude** *(26-oct-2026; decisión de Pablo sobre cómo entra Claude a
+  la app: **A + C** — Claude sigue fuera de la app, y la app solo deja encargos)*.
+  En la ventana de una tarjeta ya guardada y en cada renglón de Pendientes. Pide qué
+  se necesita e **inserta una fila** en `session_log` (`device='app'`,
+  `session_ref='encargo'`, tags `accion-pendiente`, `encargo-app` y el tablero), con
+  la referencia `tablero · tarjeta|pendiente <id> «título»: pedido`. No hay chat, ni
+  API, ni llave: la app solo hace `INSERT` en la bitácora y no toca `boards`. Claude
+  los lee al abrir sesión y los cierra con una entrada `accion-hecha`. Lógica en
+  `js/ui/encargo.js`; prueba en `tests/encargo.test.mjs`.
 
 **Guardado:** con debounce de 400ms (`save()` → `upsert()`); indicador de
 estado en la cabecera ("guardando…" / "✓ sincronizado HH:MM" / "actualizando…" /
@@ -222,7 +231,9 @@ pestaña.
 │       ├── tasks.js        # pestaña Pendientes y su filtro por tema
 │       ├── rems.js         # pestaña Recordatorios
 │       ├── frentes.js      # deslizadores de avance manual (pestaña Frentes)
-│       └── instrumentos.js # Cabina: HUD de Hoy, cintas por frente, bitácora, radar
+│       ├── instrumentos.js # Cabina: HUD de Hoy, cintas por frente, bitácora, radar
+│       ├── feed.js         # Capacitación/Entretenimiento/Inteligencia y el botón → lead en Ventas
+│       └── encargo.js      # 🤖 Encargar a Claude: un INSERT en session_log
 ├── supabase/
 │   ├── migrations/     # cambios de esquema versionados (triggers de boards)
 │   └── tests/          # su prueba en SQL, contra un Postgres local
@@ -230,7 +241,8 @@ pestaña.
 │   ├── sync.test.mjs   # prueba de js/sync.js en Chromium, sin red
 │   ├── instrumentos.test.mjs # prueba de la Cabina (HUD, cintas, catálogo), sin red
 │   ├── fechas.test.mjs # "hoy" en hora local, con el reloj a las 20:00 de Monterrey
-│   └── lead-desde-nota.test.mjs # botón de Inteligencia → tarjeta en Ventas, sin red
+│   ├── lead-desde-nota.test.mjs # botón de Inteligencia → tarjeta en Ventas, sin red
+│   └── encargo.test.mjs # botón 🤖 Encargar a Claude → fila en session_log, sin red
 ├── README.md
 └── CLAUDE.md           # este archivo
 ```
@@ -507,6 +519,10 @@ si hace falta volver a encenderlas.
 - **Triple registro de un compromiso.** Un pendiente con fecha se anota en
   Calendar (alerta), en `boards` (seguimiento) y en `session_log` (memoria).
   Cada capa tiene una función distinta; no es duplicación ociosa.
+- **Encargos desde la app.** Al abrir sesión, revisar
+  `select id, summary, created_at from session_log where 'encargo-app' = any(tags) and created_at > now() - interval '14 days' order by created_at;`
+  y descartar los que ya tengan su `accion-hecha`. El texto lo escribe Pablo, pero
+  igual se confirma con él cualquier acción hacia afuera (correo, calendario).
 - **Buzón de acciones pendientes.** Si una acción se bloquea en un dispositivo
   (típicamente por un conector que pide aprobación), se deja encargada en
   `session_log` con tag `accion-pendiente` y las instrucciones completas. Otro
@@ -723,6 +739,13 @@ sin quitar nada, no duplica, no escribe si no pudo leer):
 NODE_PATH="$(npm root -g)" node tests/lead-desde-nota.test.mjs
 ```
 
+Y el botón 🤖 Encargar a Claude (una sola fila en `session_log`, nada en `boards`,
+y que el ✕ de Pendientes siga borrando solo su renglón):
+
+```
+NODE_PATH="$(npm root -g)" node tests/encargo.test.mjs
+```
+
 Antes de dar por buena una prueba, **sabotear el código y ver que falle**. Al
 escribir ésta, una de las 16 pasaba sin importar lo que hiciera el código (un
 `indexOf` que daba -1); solo el sabotaje lo descubrió.
@@ -775,3 +798,7 @@ escribir ésta, una de las 16 pasaba sin importar lo que hiciera el código (un
 16. Inteligencia comercial → Ventas con un clic (`js/ui/feed.js`): cada nota crea
     su tarjeta en Prospecto, recargando Ventas de la base antes de agregar.
     Prueba en `tests/lead-desde-nota.test.mjs`.
+17. 🤖 Encargar a Claude (`js/ui/encargo.js`): desde una tarjeta o un pendiente se
+    deja un encargo en `session_log` para la siguiente sesión. Cierra la decisión de
+    cómo entra Claude a la app (A + C, sin chat ni API). Prueba en
+    `tests/encargo.test.mjs`.

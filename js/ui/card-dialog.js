@@ -7,6 +7,7 @@ import { app, D } from "../state.js";
 import { $, esc, uid, addDays, autoGrow, tagColor } from "../util.js";
 import { save } from "../sync.js";
 import { emit } from "../bus.js";
+import { encargar } from "./encargo.js";
 
 let editing = null;
 let DTAGS = [], DCK = [], DREM = [];
@@ -85,6 +86,8 @@ export function openCard(id, col) {
   DCK = (c.checklist || []).map(i => ({...i}));
   DREM = id ? (D().rems || []).filter(r => r.cardId === id).map(r => ({...r})) : [];
   drawTags(); drawCk(); drawRem();
+  // Solo una tarjeta que ya existe se puede encargar: la nueva aún no tiene id.
+  $("cEncargo").hidden = !id;
   $("cardDlg").showModal();
   [$("cMeta"), $("cNotes")].forEach(autoGrow);
 }
@@ -127,6 +130,13 @@ export function initCardDialog() {
   };
 
   $("cCancel").onclick = () => $("cardDlg").close();
+
+  // Encarga sobre lo que está guardado; lo que se esté editando en la ventana
+  // sigue ahí hasta que se pique Guardar o Cancelar.
+  $("cEncargo").onclick = () => {
+    const c = editing && D().cards.find(x => x.id === editing);
+    if (c) encargar({ kind: app.cur, tipo: "tarjeta", id: c.id, titulo: c.title });
+  };
 
   $("cDel").onclick = () => {
     if (editing) {
