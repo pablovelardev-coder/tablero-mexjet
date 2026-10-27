@@ -12,6 +12,16 @@ export const addDays = n => { const d = new Date(); d.setDate(d.getDate()+n); re
 export const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 export const clip = (s,n) => s.length > n ? s.slice(0,n)+"…" : s;
 
+// El detalle (`meta`) de una tarjeta es texto. La rutina de info@ale llegó a
+// guardarlo como objeto (13 tarjetas al 27-oct-2026): Inteligencia comercial
+// tronaba al buscar la liga dentro del detalle, y al abrir la tarjeta el campo
+// habría quedado "[object Object]" al guardar. Se lee como renglones "campo: valor".
+export const textoMeta = m => !m ? "" : typeof m === "string" ? m
+  : typeof m === "object"
+    ? Object.entries(m).filter(([, v]) => v !== "" && v != null)
+        .map(([k, v]) => k + ": " + (typeof v === "string" ? v : JSON.stringify(v))).join("\n")
+    : String(m);
+
 const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 export const fchCorta = d => { if(!d) return ""; const [,m,dd] = d.split("-"); return dd+" "+MESES[+m-1] };
 

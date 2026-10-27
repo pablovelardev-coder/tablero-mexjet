@@ -6,7 +6,7 @@
 // de fila completa es un borrado esperando su turno.
 import { sb, SECCIONES } from "../config.js";
 import { app, S } from "../state.js";
-import { $, esc, clip, uid, today } from "../util.js";
+import { $, esc, clip, uid, today, textoMeta } from "../util.js";
 import { setSync, upsert, recargarTablero, consultar } from "../sync.js";
 import { emit } from "../bus.js";
 
@@ -59,7 +59,7 @@ async function marcar(pieza, campo, valor) {
 
 export function yaEnVentas(p) {
   return ((S.ventas && S.ventas.cards) || []).some(c =>
-    (c.origen && c.origen.feed_id === p.id) || (p.fuente_url && (c.meta || "").includes(p.fuente_url)));
+    (c.origen && c.origen.feed_id === p.id) || (p.fuente_url && textoMeta(c.meta).includes(p.fuente_url)));
 }
 
 export function tarjetaDesdeNota(p, nombre) {

@@ -4,7 +4,7 @@
 // al enviar el formulario, para que "Cancelar" no deje rastro.
 import { COLS } from "../config.js";
 import { app, D } from "../state.js";
-import { $, esc, uid, addDays, autoGrow, tagColor } from "../util.js";
+import { $, esc, uid, addDays, autoGrow, tagColor, textoMeta } from "../util.js";
 import { save } from "../sync.js";
 import { emit } from "../bus.js";
 import { encargar } from "./encargo.js";
@@ -74,7 +74,7 @@ export function openCard(id, col) {
     : { title:"", meta:"", col: col || COLS[app.cur][0][0], frente:"", notes:"", labels:[], checklist:[] };
   $("cardDlgTitle").textContent = id ? "Editar tarjeta" : "Nueva tarjeta";
   $("cTitle").value = c.title;
-  $("cMeta").value = c.meta || "";
+  $("cMeta").value = textoMeta(c.meta);
   $("cNotes").value = c.notes || "";
   $("cFrente").value = c.frente || "";
   const u = c.ultima || {}, g = c.siguiente || {};
