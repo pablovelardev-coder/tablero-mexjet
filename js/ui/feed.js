@@ -7,7 +7,7 @@
 import { sb, SECCIONES } from "../config.js";
 import { app, S } from "../state.js";
 import { $, esc, clip, uid, today } from "../util.js";
-import { setSync, upsert, recargarTablero } from "../sync.js";
+import { setSync, upsert, recargarTablero, consultar } from "../sync.js";
 import { emit } from "../bus.js";
 
 // Caché en memoria por sección. Se recarga al entrar, no en cada repintado.
@@ -27,14 +27,15 @@ export async function cargarFeed(seccionApp) {
   renderFeed();
   // Una sola consulta por sección de la app: trae todas las `seccion` de BD que use.
   const secciones = [...new Set(s.temas.map(t => t.seccion))];
-  const { data, error } = await sb.from("feed")
+  const { data, error } = await consultar(() => sb.from("feed")
     .select("id,seccion,tema,titulo,resumen,fuente_url,fuente_nombre,publicado_at,leido,guardado,descartado")
     .in("seccion", secciones)
     .eq("descartado", false)
     .order("publicado_at", { ascending: false, nullsFirst: false })
-    .limit(400);
+    .limit(400));
   cargando = false;
-  if (error) { setSync("error"); FEED[seccionApp] = []; renderFeed(); return }
+  // Si falla, se queda lo que ya se veía: vaciarlo dejaba la sección en blanco.
+  if (error) { setSync("error"); FEED[seccionApp] ||= []; renderFeed(); return }
   FEED[seccionApp] = data || [];
   renderFeed();
 }
