@@ -36,6 +36,7 @@ function instalarFalso() {
     auth: {
       onAuthStateChange() { return { data: { subscription: { unsubscribe() {} } } } },
       getSession() { return Promise.resolve({ data: { session: window.__sesion } }) },
+      refreshSession() { window.__log.push(["refresh"]); return Promise.resolve({ data: {}, error: null }) },
       signOut() { return Promise.resolve({}) },
     },
     from() {
@@ -229,6 +230,64 @@ caso("Recarga con error de red: conserva lo que había", async () => {
   await ev(page, () => { window.__resp.select = () => ({ data: null, error: { message: "fetch failed" } }) });
   await ev(page, () => window.__sync.recargarTodo());
   assert.equal(await ev(page, () => window.__state.S.direccion.cards[0].id), "direccion-viejo");
+  await ctx.close();
+});
+
+// --- Token vencido (27-oct-2026: el iPhone volvió, Ventas dio 401 y se quedó viejo) ---
+const vencido = { data: null, status: 401, error: { code: "PGRST303", message: "JWT expired" } };
+
+caso("Token vencido al volver: renueva la sesión UNA vez, reintenta y queda 'sincronizado'", async () => {
+  const { page, ctx } = await nuevaPagina();
+  await ev(page, ([f, v]) => {
+    window.__db = f;
+    const yaFallo = {};
+    // Los tres salen con el token viejo: cada uno da 401 la primera vez.
+    window.__resp.select = k => {
+      if (!yaFallo[k]) { yaFallo[k] = true; return v }
+      return { data: { data: window.__db[k] }, error: null };
+    };
+  }, [{ ventas: fresco("ventas"), direccion: fresco("direccion"), personal: fresco("personal") }, vencido]);
+  await ev(page, () => window.__sync.recargarTodo());
+  const l = await log(page);
+  assert.equal(l.filter(x => x[0] === "refresh").length, 1, "las tres consultas deben compartir una sola renovación");
+  assert.equal(selects(l), 6, "3 intentos + 3 reintentos");
+  assert.deepEqual(await ev(page, () => window.__state.S.ventas), fresco("ventas"));
+  assert.match(await sync(page), /^✓ sincronizado/);
+  await ctx.close();
+});
+
+caso("Token que no se deja renovar: 'error de conexión' y conserva lo que había (no siembra)", async () => {
+  const { page, ctx } = await nuevaPagina();
+  await ev(page, v => { window.__resp.select = () => v }, vencido);
+  await ev(page, () => window.__sync.recargarTodo());
+  const l = await log(page);
+  assert.equal(selects(l), 6, "un solo reintento por tablero, no un ciclo");
+  assert.equal(upserts(l), 0);
+  assert.equal(await ev(page, () => window.__state.S.ventas.cards[0].id), "ventas-viejo");
+  assert.equal(await sync(page), "⚠︎ error de conexión");
+  await ctx.close();
+});
+
+caso("Error de red que no es 401: no renueva la sesión", async () => {
+  const { page, ctx } = await nuevaPagina();
+  await ev(page, () => { window.__resp.select = () => ({ data: null, error: { message: "fetch failed" } }) });
+  await ev(page, () => window.__sync.recargarTodo());
+  const l = await log(page);
+  assert.equal(l.filter(x => x[0] === "refresh").length, 0);
+  assert.equal(selects(l), 3);
+  await ctx.close();
+});
+
+caso("La recarga avisa 'recargado' (para que main.js vuelva a pedir el feed)", async () => {
+  const { page, ctx } = await nuevaPagina();
+  await ev(page, async f => {
+    window.__db = f;
+    const bus = await import("/js/bus.js");
+    window.__recargados = 0;
+    bus.on("recargado", () => window.__recargados++);
+  }, { ventas: fresco("ventas"), direccion: fresco("direccion"), personal: fresco("personal") });
+  await ev(page, () => window.__sync.recargarTodo());
+  assert.equal(await ev(page, () => window.__recargados), 1);
   await ctx.close();
 });
 

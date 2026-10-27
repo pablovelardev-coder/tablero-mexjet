@@ -29,8 +29,27 @@ export function setSync(st) {
   else el.textContent = "·";
 }
 
+// Un 401 casi siempre es un token vencido, no la red: la pestaña durmió más de lo
+// que dura el token y la consulta salió antes de que supabase-js lo renovara. Pasó
+// el 27-oct-2026 en el iPhone: al volver, Ventas dio 401, la app dijo "error de
+// conexión" y se quedó con la copia vieja. Se renueva la sesión UNA vez (las
+// consultas en paralelo comparten la misma renovación) y se reintenta.
+function tokenVencido(r) {
+  const e = r && r.error;
+  return !!e && (r.status === 401 || e.code === "PGRST301" || e.code === "PGRST303" || /jwt/i.test(e.message || ""));
+}
+let renovando = null;
+function renovarSesion() {
+  return renovando ||= Promise.resolve(sb.auth.refreshSession()).catch(() => {}).finally(() => { renovando = null });
+}
+export async function consultar(hacer) {
+  let r = await hacer();
+  if (tokenVencido(r)) { await renovarSesion(); r = await hacer() }
+  return r;
+}
+
 export async function loadBoard(kind) {
-  const { data, error } = await sb.from("boards").select("data").eq("kind",kind).maybeSingle();
+  const { data, error } = await consultar(() => sb.from("boards").select("data").eq("kind",kind).maybeSingle());
   if (error) { setSync("error"); return }
   if (data && data.data) { S[kind] = data.data }
   // ⚠️ NUNCA escribir desde aquí. Si la consulta no trajo fila —porque la sesion
@@ -106,7 +125,7 @@ function vaciarPendiente() {
 // fila (sesión que aún no autentica, RLS, un hipo de red), se queda lo que ya
 // había. Sembrar aquí pintaría un tablero vacío encima del bueno.
 async function recargar(kind) {
-  const { data, error } = await sb.from("boards").select("data").eq("kind", kind).maybeSingle();
+  const { data, error } = await consultar(() => sb.from("boards").select("data").eq("kind", kind).maybeSingle());
   if (error || !data || !data.data) return false;
   S[kind] = data.data;
   return true;
@@ -129,6 +148,7 @@ export function recargarTodo() {
     setSync("actualizando");
     const llegaron = await Promise.all(TABLEROS.map(recargar));
     emit("datos-cambiaron");
+    emit("recargado");                 // el feed no vive en `boards`: main.js lo vuelve a pedir
     setSync(llegaron.every(Boolean) ? "ok" : "error");
   })().finally(() => { recargando = null });
   return recargando;

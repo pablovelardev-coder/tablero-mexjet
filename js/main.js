@@ -36,3 +36,5 @@ onTemaChange(renderFeed);
 
 on("sesion-iniciada", start);
 on("datos-cambiaron", renderAll);
+// Al volver de segundo plano se recargan los tableros; el feed también, si es lo que está en pantalla.
+on("recargado", () => { if (esSeccion(app.cur)) cargarFeed(app.cur) });
