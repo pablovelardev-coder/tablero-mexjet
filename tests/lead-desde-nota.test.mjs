@@ -214,6 +214,20 @@ caso("Una nota que ya está en Ventas sale como ✓ en Ventas y no se puede mand
   await ctx.close();
 });
 
+// 27-oct-2026: 13 tarjetas de info@ale traían `meta` como objeto y la pantalla
+// de Inteligencia tronaba sin mostrar ni una nota.
+caso("Una tarjeta de Ventas con el detalle como objeto no rompe Inteligencia", async () => {
+  const datos = datosDePrueba();
+  datos.tablas.boards[0].data.cards.push({ id: "v_info_x", title: "Lead de correo", col: "lead",
+    meta: { remitente: "Persona Ficticia", liga: "https://ejemplo.invalid/hilo" } });
+  const { page, ctx } = await abrirApp({ datos });
+  await irAInteligencia(page);
+  assert.equal(await page.locator(".pieza").count(), 1);
+  assert.equal((await page.locator(".pieza .b-lead").textContent()).trim(), "→ lead en Ventas");
+  assert.deepEqual(await escrituras(page), []);
+  await ctx.close();
+});
+
 caso("Si no se puede leer Ventas de la base, no se escribe y se avisa", async () => {
   const { page, ctx } = await abrirApp();
   await irAInteligencia(page);

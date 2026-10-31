@@ -3,7 +3,7 @@
 // recordatorios, notas y los pendientes ligados por `frente` o por `tids`.
 import { COLS } from "../config.js";
 import { app, D } from "../state.js";
-import { $, esc, clip, fchCorta, diasDesde, dueClass, tagColor } from "../util.js";
+import { $, esc, clip, fchCorta, diasDesde, dueClass, tagColor, textoMeta } from "../util.js";
 import { save } from "../sync.js";
 import { showTab } from "../nav.js";
 import { renderTasks, setTaskFilter } from "./tasks.js";
@@ -14,7 +14,7 @@ import { openCard } from "./card-dialog.js";
 function actsHtml(c) {
   const u = c.ultima || {}, g = c.siguiente || {};
   const hayU = !!(u.texto || u.fecha), hayG = !!(g.texto || g.fecha);
-  if (!hayU && !hayG) return c.meta ? `<div class="meta">${esc(clip(c.meta,110))}</div>` : "";
+  if (!hayU && !hayG) return c.meta ? `<div class="meta">${esc(clip(textoMeta(c.meta),110))}</div>` : "";
 
   let h = '<div class="acts">';
   if (hayG) {
