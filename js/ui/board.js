@@ -40,10 +40,14 @@ function actsHtml(c) {
 }
 
 // Pendientes abiertos de una tarjeta: por ids explícitos (tids) o por frente.
+// En Ventas cada tarjeta es una cuenta y un frente agrupa muchas: ligar por frente
+// le pinta a cada una los pendientes de las demás (pasó el 30-oct-2026: un pendiente
+// de una sola cuenta salía en 34 tarjetas). Ahí solo cuenta `tids`.
 function pendientesDe(c) {
   const tie = Array.isArray(c.tids) && c.tids.length;
+  const porFrente = app.cur !== "ventas";
   return (D().tasks || [])
-    .filter(t => t.status !== "Hecha" && (tie ? c.tids.includes(t.id) : (c.frente && (t.frente||"") === c.frente)))
+    .filter(t => t.status !== "Hecha" && (tie ? c.tids.includes(t.id) : (porFrente && c.frente && (t.frente||"") === c.frente)))
     .sort((a,b) => (a.due||"9999-99-99").localeCompare(b.due||"9999-99-99"));
 }
 

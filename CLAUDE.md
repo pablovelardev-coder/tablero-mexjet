@@ -165,7 +165,8 @@ sus propias columnas de pipeline y su propio orden de pestañas.
   pendientes abiertos (y vencidos) tiene y cuántas tarjetas vivas no tienen
   siguiente acción. Los pendientes se cuentan con la misma regla que la cara de
   la tarjeta: por `tids` si los tiene, si no por frente — en Ventas los pendientes
-  llevan `MexJet · Comercial` y solo cruzan por `tids`. **En rojo**
+  llevan `MexJet · Comercial` y solo cruzan por `tids` (la cara de una tarjeta de
+  Ventas nunca liga por frente: mostraría pendientes de otras cuentas). **En rojo**
   el frente con tarjetas vivas y 21 días o más sin movimiento. Debajo, la bitácora
   de movimientos (`card_events`). Se calcula solo; los deslizadores de % a mano
   siguen, plegados, pero ya nada depende de ellos. Lógica en `js/ui/instrumentos.js`,
