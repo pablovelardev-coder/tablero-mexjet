@@ -223,6 +223,29 @@ caso("Frentes: una cinta por frente, con avance, alerta y bitácora; el archivo 
   await ctx.close();
 });
 
+// 30-oct-2026: la prenda de una cuenta salía en todas las tarjetas sin `tids` de su
+// frente. Una tarjeta de Ventas solo muestra lo que tiene ligado a ella.
+caso("Pipeline de Ventas: una tarjeta no muestra pendientes de otra cuenta del mismo frente", async () => {
+  const { page, ctx } = await abrirApp();
+  await pestana(page, "Pipeline");
+  const cara = titulo => page.locator(".card", { hasText: titulo }).first().textContent();
+  assert.doesNotMatch(await cara("Cuenta Dos"), /Mandar propuesta a Cuenta Uno/);
+  assert.doesNotMatch(await cara("Cuenta Cuatro"), /Definir si se renueva Cuenta Seis/);
+  assert.match(await cara("Cuenta Ocho"), /Revisar contrato de Cuenta Ocho/);   // por tids, sí
+  assert.deepEqual(await escrituras(page), []);
+  await ctx.close();
+});
+
+caso("Temas de Dirección: ahí la tarjeta es un tema y sí liga sus pendientes por frente", async () => {
+  const datos = datosDePrueba();
+  datos.tablas.boards[1].data.tasks = [{ id: "dt1", text: "Pendiente del área", frente: "Área Uno", status: "Por hacer" }];
+  const { page, ctx } = await abrirApp({ datos });
+  await tablero(page, "direccion");
+  await pestana(page, "Temas");
+  assert.match(await page.locator(".card", { hasText: "Tema Uno" }).first().textContent(), /Pendiente del área/);
+  await ctx.close();
+});
+
 caso("Si card_events falla, las cintas se pintan con la última acción y se avisa", async () => {
   const datos = datosDePrueba();
   datos.falla = ["card_events"];
