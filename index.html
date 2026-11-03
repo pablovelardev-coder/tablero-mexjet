@@ -91,6 +91,32 @@
       </div>
     </section>
     <section class="view on" data-v="pipeline"><div class="board" id="board"></div></section>
+    <section class="view" data-v="vuelos">
+      <div class="monton">
+        <h3 class="monton-t">✈︎ Próximos vuelos <span class="count" id="vueN">0</span></h3>
+        <p class="sub">De los clientes en vigilancia. Los escribe la vigilancia de vuelos al leer el correo; un cambio sale en ámbar.</p>
+        <div id="vueLista"></div>
+      </div>
+      <div class="monton" style="margin-top:16px">
+        <h3 class="monton-t">Clientes vigilados <span class="count" id="vigN">0</span></h3>
+        <p class="sub">Fijo se vigila siempre; seguimiento, hasta su fecha. La vigilancia lee esta lista en cada corrida.</p>
+        <div id="vigLista"></div>
+        <p class="sub" id="vigFuera"></p>
+        <details class="dinbox" id="vigNuevo">
+          <summary>+ Agregar cliente</summary>
+          <form id="vigForm" class="vig-form">
+            <label>Cliente <input name="nombre" required placeholder="Como lo nombras, p. ej. la clave de la cuenta"></label>
+            <label>Claves de contrato <input name="claves" placeholder="Separadas por coma"></label>
+            <label>Tipo <select name="tipo"><option value="seguimiento">Seguimiento (hasta una fecha)</option><option value="fijo">Fijo (siempre)</option></select></label>
+            <label>Hasta <input name="hasta" type="date"></label>
+            <label class="ancho">Motivo <textarea name="motivo" rows="2" placeholder="Qué vuelo o asunto se sigue y por qué"></textarea></label>
+            <label class="ancho">Contacto <input name="contacto" placeholder="Quién pide los vuelos, correo y teléfono"></label>
+            <label class="ancho">Cómo encontrar sus correos <input name="correos" placeholder="Opcional: from:dominio.com OR to:dominio.com. Si lo dejas vacío, se busca por las claves."></label>
+            <p class="ancho"><button class="primary" type="submit">Agregar a la vigilancia</button></p>
+          </form>
+        </details>
+      </div>
+    </section>
     <section class="view" data-v="pendientes">
       <p class="sub">Vencidas en rojo, próximas (7 días) en ámbar.</p>
       <table id="tblTasks"><thead><tr><th style="width:120px">Vence</th><th>Tarea</th><th style="width:140px">Etiqueta</th><th style="width:130px">Estado</th><th style="width:44px"></th></tr></thead><tbody></tbody></table>

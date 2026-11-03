@@ -401,6 +401,12 @@ dialog::backdrop{background:rgba(0,0,0,.32);-webkit-backdrop-filter:blur(3px);ba
 .switch button[data-b=capacitacion]{--ico:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z'/><path d='M12 6.5v13'/></svg>")}
 .switch button[data-b=entretenimiento]{--ico:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='9'/><path d='M10 8.5v7l6-3.5z' fill='black'/></svg>")}
 
+/* Pestaña Vuelos: formulario para agregar un cliente a la vigilancia */
+.vig-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;padding:4px 0 8px}
+.vig-form label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted)}
+.vig-form .ancho{grid-column:1/-1;margin:0}
+@media (max-width:720px){.vig-form{grid-template-columns:1fr}}
+
 /* ---------- Accesibilidad ------------------------------------------------- */
 @media (prefers-reduced-transparency:reduce){
   header::before,.switch,.dlg .actions{background:var(--panel)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
