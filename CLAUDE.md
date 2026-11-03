@@ -112,8 +112,9 @@ pasajeros, clave de reservación, estado `programado|cambio|cancelado|volado`, y
 - **RLS activo con políticas** de select, insert y update por usuario, **sin
   delete**: la app agrega clientes con `INSERT` y los quita con
   `UPDATE activo = false`. Nada se borra.
-- Las lee y escribe la tarea local **vigilancia-vuelos-clientes** (Mac): toma la
-  lista de aquí en cada corrida y escribe cada vuelo que encuentra en el correo.
+- Las lee y escribe la rutina cloud **Vigilancia de vuelos de clientes** (antes tarea
+  local de la Mac, que dejaba de correr con la Mac apagada): toma la lista de aquí en
+  cada corrida y escribe cada vuelo que encuentra en el correo.
   Antes la lista vivía solo en su `SKILL.md` y el teléfono no la veía.
 - Migración en `supabase/migrations/20261103_vuelos_en_seguimiento.sql`.
 
@@ -505,6 +506,7 @@ archivos). El catálogo completo con el prompt exacto de cada una está en
 | **06:45** | todos | Captura diaria de flota | parsea el correo *DASHBOARD MEXJET* y lo escribe en `flota_dia` y `flota_evento`. Solo captura: no analiza, no notifica | Gmail, Supabase |
 | **07:10** | lun-vie | Respaldo de tableros | snapshot a `boards_backup`, purga >90 días y **alerta si un tablero quedó vacío o perdió >30% de tarjetas** | Supabase |
 | **08:00** | lunes | Revisión de salud | vencidos, acciones sin cerrar, integridad de los tableros. **Solo lee** | Supabase |
+| **08:30 · 15:30** | lun-vie | Vigilancia de vuelos de clientes | lee la lista de `vuelos_vigilados`, revisa el correo de esos clientes, avisa vuelos nuevos y cambios en Calendar y escribe cada tramo en `vuelos` (pestaña Vuelos). Era tarea local de la Mac hasta el 3-nov-2026 | Gmail, Calendar, Supabase |
 | **09:00 · 13:00 · 17:00** | lun-vie | Monitoreo `info@ale.mx` | tría el buzón general, marca 🔴 lo que toca **Monterrey** y **escribe los leads reales al tablero de Ventas**, columna `lead` | Gmail, Supabase |
 
 **Cinco desactivadas:** Parte matutino completo · Estatus de flota e incidencias ·
