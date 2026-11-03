@@ -102,6 +102,21 @@ de columna** o **sale** (`to_col` nulo). La escribe el trigger
 - Migración en `supabase/migrations/20261019_card_events_y_limpiar_feed.sql`,
   junto con `limpiar_feed()` (ver *Curación del feed*).
 
+Tablas **`vuelos_vigilados`** y **`vuelos`** *(3-nov-2026)* — los vuelos de los
+clientes que Pablo tiene en seguimiento. `vuelos_vigilados` es la lista de clientes
+(fijo o seguimiento hasta una fecha, claves, motivo, contacto, cómo encontrar sus
+correos); `vuelos` es un renglón por tramo detectado (salida, ruta, equipo,
+pasajeros, clave de reservación, estado `programado|cambio|cancelado|volado`, y
+`hora_por_confirmar` cuando el preliminar trae el día pero no la hora).
+
+- **RLS activo con políticas** de select, insert y update por usuario, **sin
+  delete**: la app agrega clientes con `INSERT` y los quita con
+  `UPDATE activo = false`. Nada se borra.
+- Las lee y escribe la tarea local **vigilancia-vuelos-clientes** (Mac): toma la
+  lista de aquí en cada corrida y escribe cada vuelo que encuentra en el correo.
+  Antes la lista vivía solo en su `SKILL.md` y el teléfono no la veía.
+- Migración en `supabase/migrations/20261103_vuelos_en_seguimiento.sql`.
+
 Tabla **`boards_backup`** — snapshots de `boards`:
 
 | Columna | Notas |
@@ -171,6 +186,12 @@ sus propias columnas de pipeline y su propio orden de pestañas.
   de movimientos (`card_events`). Se calcula solo; los deslizadores de % a mano
   siguen, plegados, pero ya nada depende de ellos. Lógica en `js/ui/instrumentos.js`,
   que **solo lee**.
+- **Vuelos** *(Ventas, 3-nov-2026)* — los **próximos vuelos** de los clientes en
+  vigilancia (de hoy en adelante; un cambio sale en ámbar, un cancelado en rojo) y
+  la **lista de clientes vigilados**, con el seguimiento ya cumplido marcado. Desde
+  ahí se agrega un cliente (un `INSERT`) o se quita (un `UPDATE activo = false`).
+  Lee `vuelos` y `vuelos_vigilados`, no `boards`; si esa lectura falla, solo esta
+  pestaña lo dice. Lógica en `js/ui/vuelos.js`; prueba en `tests/vuelos.test.mjs`.
 - **Capacitación › Inteligencia comercial** — cada nota trae **→ lead en Ventas**:
   pide a nombre de quién va y crea la tarjeta en **Prospecto** (frente
   Prospección, etiqueta Inteligencia, `origen: {feed_id, fuente_url}`), y marca la
@@ -234,7 +255,8 @@ pestaña.
 │       ├── frentes.js      # deslizadores de avance manual (pestaña Frentes)
 │       ├── instrumentos.js # Cabina: HUD de Hoy, cintas por frente, bitácora, radar
 │       ├── feed.js         # Capacitación/Entretenimiento/Inteligencia y el botón → lead en Ventas
-│       └── encargo.js      # 🤖 Encargar a Claude: un INSERT en session_log
+│       ├── encargo.js      # 🤖 Encargar a Claude: un INSERT en session_log
+│       └── vuelos.js       # pestaña Vuelos: próximos vuelos y clientes vigilados
 ├── supabase/
 │   ├── migrations/     # cambios de esquema versionados (triggers de boards)
 │   └── tests/          # su prueba en SQL, contra un Postgres local
@@ -243,7 +265,8 @@ pestaña.
 │   ├── instrumentos.test.mjs # prueba de la Cabina (HUD, cintas, catálogo), sin red
 │   ├── fechas.test.mjs # "hoy" en hora local, con el reloj a las 20:00 de Monterrey
 │   ├── lead-desde-nota.test.mjs # botón de Inteligencia → tarjeta en Ventas, sin red
-│   └── encargo.test.mjs # botón 🤖 Encargar a Claude → fila en session_log, sin red
+│   ├── encargo.test.mjs # botón 🤖 Encargar a Claude → fila en session_log, sin red
+│   └── vuelos.test.mjs  # pestaña Vuelos: lista, agregar y quitar sin borrar, sin red
 ├── README.md
 └── CLAUDE.md           # este archivo
 ```
@@ -747,6 +770,13 @@ y que el ✕ de Pendientes siga borrando solo su renglón):
 NODE_PATH="$(npm root -g)" node tests/encargo.test.mjs
 ```
 
+Y la pestaña Vuelos (solo próximos, en orden; agregar es un `INSERT` y quitar un
+`UPDATE`, nunca un borrado; si no puede leer, el resto de la app sigue):
+
+```
+NODE_PATH="$(npm root -g)" node tests/vuelos.test.mjs
+```
+
 Antes de dar por buena una prueba, **sabotear el código y ver que falle**. Al
 escribir ésta, una de las 16 pasaba sin importar lo que hiciera el código (un
 `indexOf` que daba -1); solo el sabotaje lo descubrió.
@@ -803,3 +833,6 @@ escribir ésta, una de las 16 pasaba sin importar lo que hiciera el código (un
     deja un encargo en `session_log` para la siguiente sesión. Cierra la decisión de
     cómo entra Claude a la app (A + C, sin chat ni API). Prueba en
     `tests/encargo.test.mjs`.
+18. Pestaña **Vuelos** en Ventas (`js/ui/vuelos.js`) y tablas `vuelos_vigilados` y
+    `vuelos`: la lista de clientes en seguimiento deja de vivir solo en la Mac y la
+    app la muestra y la edita. Prueba en `tests/vuelos.test.mjs`.

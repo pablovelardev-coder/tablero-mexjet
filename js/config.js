@@ -16,14 +16,14 @@ export const COLS = {
 
 // Orden de las pestañas por tablero
 export const TABS = {
-  ventas: ["hoy","pipeline","pendientes","recordatorios","frentes"],
+  ventas: ["hoy","pipeline","vuelos","pendientes","recordatorios","frentes"],
   direccion: ["hoy","pendientes","recordatorios","frentes","pipeline"],
   personal: ["pipeline","pendientes","recordatorios","frentes"]
 };
 
 export const STATUSES = ["Por hacer","En curso","Bloqueada","Hecha"];
 
-export const TAB_LABELS = { hoy:"Hoy", pipeline:"Pipeline", pendientes:"Pendientes", recordatorios:"Recordatorios", frentes:"Frentes" };
+export const TAB_LABELS = { hoy:"Hoy", pipeline:"Pipeline", vuelos:"Vuelos", pendientes:"Pendientes", recordatorios:"Recordatorios", frentes:"Frentes" };
 
 // Colores del sistema de Apple: azul, verde, naranja, morado, rojo, cian, café, rosa, índigo, gris.
 export const TAGPAL = ["#007aff","#34c759","#ff9500","#af52de","#ff3b30","#30b0c7","#a2845e","#ff2d55","#5856d6","#8e8e93"];

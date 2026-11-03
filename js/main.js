@@ -4,6 +4,7 @@ import { loadBoard, subscribeBoards, setSync, vigilarRegreso } from "./sync.js";
 import { buildTabs, initBoardSwitch, onTemaChange } from "./nav.js";
 import { esSeccion } from "./config.js";
 import { cargarFeed, renderFeed } from "./ui/feed.js";
+import { cargarVuelos, initVuelos } from "./ui/vuelos.js";
 import { renderAll } from "./render.js";
 import { initAuth } from "./auth.js";
 import { initCardDialog } from "./ui/card-dialog.js";
@@ -21,12 +22,14 @@ async function start() {
   buildTabs();
   renderAll();
   setSync("ok");
+  cargarVuelos();   // lee `vuelos` y `vuelos_vigilados`, no `boards`
 }
 
 initAuth();
 initCardDialog();
 initTasks();
 initRems();
+initVuelos();
 initBoardSwitch(() => {
   buildTabs();
   if (esSeccion(app.cur)) cargarFeed(app.cur);   // lee `feed`, no `boards`
@@ -37,4 +40,4 @@ onTemaChange(renderFeed);
 on("sesion-iniciada", start);
 on("datos-cambiaron", renderAll);
 // Al volver de segundo plano se recargan los tableros; el feed también, si es lo que está en pantalla.
-on("recargado", () => { if (esSeccion(app.cur)) cargarFeed(app.cur) });
+on("recargado", () => { if (esSeccion(app.cur)) cargarFeed(app.cur); cargarVuelos() });
