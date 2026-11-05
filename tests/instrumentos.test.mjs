@@ -246,6 +246,29 @@ caso("Temas de Dirección: ahí la tarjeta es un tema y sí liga sus pendientes 
   await ctx.close();
 });
 
+// 5-nov-2026: un pendiente suelto de un frente de Personal salía en todas sus tarjetas.
+caso("Tablero Personal: una tarjeta no muestra pendientes de otro asunto del mismo frente", async () => {
+  const datos = datosDePrueba();
+  const p = datos.tablas.boards.find(b => b.kind === "personal").data;
+  p.cards = [
+    { id: "p1", title: "Asunto Uno", frente: "Familia", col: "todo" },
+    { id: "p2", title: "Asunto Dos", frente: "Familia", col: "todo", tids: ["pt2"] },
+  ];
+  p.tasks = [
+    { id: "pt1", text: "Pendiente suelto de Familia", frente: "Familia", status: "Por hacer" },
+    { id: "pt2", text: "Pendiente del Asunto Dos", frente: "Familia", status: "Por hacer" },
+  ];
+  const { page, ctx } = await abrirApp({ datos });
+  await tablero(page, "personal");
+  await pestana(page, "Tablero");
+  const cara = titulo => page.locator(".card", { hasText: titulo }).first().textContent();
+  assert.doesNotMatch(await cara("Asunto Uno"), /Pendiente suelto de Familia/);
+  assert.doesNotMatch(await cara("Asunto Dos"), /Pendiente suelto de Familia/);
+  assert.match(await cara("Asunto Dos"), /Pendiente del Asunto Dos/);          // por tids, sí
+  assert.deepEqual(await escrituras(page), []);
+  await ctx.close();
+});
+
 caso("Si card_events falla, las cintas se pintan con la última acción y se avisa", async () => {
   const datos = datosDePrueba();
   datos.falla = ["card_events"];

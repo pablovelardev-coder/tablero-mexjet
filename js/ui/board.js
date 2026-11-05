@@ -43,9 +43,13 @@ function actsHtml(c) {
 // En Ventas cada tarjeta es una cuenta y un frente agrupa muchas: ligar por frente
 // le pinta a cada una los pendientes de las demás (pasó el 30-oct-2026: un pendiente
 // de una sola cuenta salía en 34 tarjetas). Ahí solo cuenta `tids`.
+// En Personal pasa lo mismo: el frente es un cajón amplio (familia, casa, finanzas)
+// y cada tarjeta es un asunto distinto; un pendiente suelto del frente salía en las 7
+// tarjetas vivas de ese frente (5-nov-2026). Solo Dirección liga por frente: ahí la
+// tarjeta es el tema y el frente es su área.
 function pendientesDe(c) {
   const tie = Array.isArray(c.tids) && c.tids.length;
-  const porFrente = app.cur !== "ventas";
+  const porFrente = app.cur === "direccion";
   return (D().tasks || [])
     .filter(t => t.status !== "Hecha" && (tie ? c.tids.includes(t.id) : (porFrente && c.frente && (t.frente||"") === c.frente)))
     .sort((a,b) => (a.due||"9999-99-99").localeCompare(b.due||"9999-99-99"));
