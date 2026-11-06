@@ -838,3 +838,6 @@ escribir ésta, una de las 16 pasaba sin importar lo que hiciera el código (un
 18. Pestaña **Vuelos** en Ventas (`js/ui/vuelos.js`) y tablas `vuelos_vigilados` y
     `vuelos`: la lista de clientes en seguimiento deja de vivir solo en la Mac y la
     app la muestra y la edita. Prueba en `tests/vuelos.test.mjs`.
+19. Personal liga los pendientes a la tarjeta solo por `tids`, como Ventas
+    (`js/ui/board.js`): un pendiente suelto de un frente salía en todas sus
+    tarjetas. Solo Dirección liga por frente. Prueba en `tests/instrumentos.test.mjs`.
